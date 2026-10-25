@@ -27,8 +27,6 @@ Or in VS Code: **Extensions** → **⋯** → **Install from VSIX...**. To updat
 
 To try it right away, open the [example](https://github.com/kikutano/tinyprobe/tree/main/example) folder of the tinyprobe repository: it calls a public test API, so there is nothing else to install.
 
-**Coming from Foxify?** This extension was called Foxify until 0.1.0. VS Code does not replace it by itself: uninstall "Foxify", install this one, and rename your `foxify.*` settings to `tinyprobe.*`. You also need the `tinyprobe` binary (0.10.0 or newer), see below.
-
 ## Requirements
 
 [tinyprobe](https://github.com/kikutano/tinyprobe#install) 0.10.0 or newer, on the `PATH` or set with `tinyprobe.path`:
