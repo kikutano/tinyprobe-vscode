@@ -61,4 +61,10 @@ jobs:
 
       - name: Publish to Open VSX
         if: env.OVSX_PAT != '' && !contains(github.ref_name, '-')
-        run: npx --yes ovsx publish tinyprobe-vscode.vsix
+        run: |
+          # Open VSX needs the publisher's namespace once; later releases find it already there.
+          publisher=$(node -p "require('./package.json').publisher")
+          if ! curl -sf -o /dev/null "https://open-vsx.org/api/$publisher"; then
+            npx --yes ovsx create-namespace "$publisher"
+          fi
+          npx --yes ovsx publish tinyprobe-vscode.vsix
