@@ -1,0 +1,47 @@
+name: Bug report
+description: The extension shows something wrong, misses a problem, or fails to run or call.
+labels: [bug]
+body:
+  - type: input
+    id: extension
+    attributes:
+      label: Extension version
+      description: In the Extensions view, or in `CHANGELOG.md` of the .vsix you installed.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: foxify
+    attributes:
+      label: Foxify version
+      description: The output of `foxify --version`. The "Foxify" output channel also shows it.
+      placeholder: 0.9.0
+    validations:
+      required: true
+  - type: input
+    id: vscode
+    attributes:
+      label: VS Code version and operating system
+      placeholder: VS Code 1.105 on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      description: What you did, and the smallest Foxify files that show the problem. Remove secrets and real hosts.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: A screenshot helps. Add the content of the "Foxify" output channel (View → Output → Foxify).
+    validations:
+      required: true

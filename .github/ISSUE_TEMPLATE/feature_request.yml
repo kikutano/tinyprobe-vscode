@@ -1,0 +1,25 @@
+name: Feature request
+description: Something you would like to do with Foxify from VS Code.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](https://github.com/kikutano/Foxify/blob/main/ROADMAP.md) first (tasks marked `ext`): it may be planned already. Requests about the YAML format or the CLI go to the [Foxify repository](https://github.com/kikutano/Foxify/issues).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do in the editor, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How it could work
+      description: Where it would appear (CodeLens, Test Explorer, run view, a command, a setting) and what it would do.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today
+      description: Workarounds, or how another extension or tool does it.

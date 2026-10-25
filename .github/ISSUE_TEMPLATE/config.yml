@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question
+    url: https://github.com/kikutano/Foxify/discussions
+    about: How do I...? Ask in the Foxify Discussions.
+  - name: Format or CLI problem
+    url: https://github.com/kikutano/Foxify/issues
+    about: The YAML format, validation messages and foxify commands are in the Foxify repository.

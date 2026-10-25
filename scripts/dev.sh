@@ -12,7 +12,7 @@
 #   install       Package and install the .vsix in your VS Code.
 #
 # Environment variables:
-#   FOXIFY_REPO   the foxify repository (default: ../foxify or ../tyfapi, whichever exists)
+#   FOXIFY_REPO   the foxify repository (default: ../Foxify, ../foxify or ../tyfapi, whichever exists)
 #   FOXIFY_PATH   the foxify binary (default: the development build of FOXIFY_REPO)
 #   FOXIFY_PORT   port of the test server (default: 5122)
 set -eu
@@ -31,7 +31,7 @@ foxify_repo() {
     echo "$FOXIFY_REPO"
     return
   fi
-  for candidate in "$ROOT/../foxify" "$ROOT/../tyfapi"; do
+  for candidate in "$ROOT/../Foxify" "$ROOT/../foxify" "$ROOT/../tyfapi"; do
     if [ -f "$candidate/Foxify.slnx" ]; then
       (cd "$candidate" && pwd)
       return
