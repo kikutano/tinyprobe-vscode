@@ -1,11 +1,11 @@
 name: Feature request
-description: Something you would like to do with Foxify from VS Code.
+description: Something you would like to do with tinyprobe from VS Code.
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        Check the [roadmap](https://github.com/kikutano/Foxify/blob/main/ROADMAP.md) first (tasks marked `ext`): it may be planned already. Requests about the YAML format or the CLI go to the [Foxify repository](https://github.com/kikutano/Foxify/issues).
+        Check the [roadmap](https://github.com/kikutano/tinyprobe/blob/main/ROADMAP.md) first (tasks marked `ext`): it may be planned already. Requests about the YAML format or the CLI go to the [tinyprobe repository](https://github.com/kikutano/tinyprobe/issues).
   - type: textarea
     id: problem
     attributes:

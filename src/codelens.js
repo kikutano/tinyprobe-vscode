@@ -8,7 +8,7 @@ const protocol = require('./protocol');
  * "▶ Call" above each endpoint defined in the file and "▶ Run workflow" at the top of a workflow,
  * placed with the locations of the last inspection.
  */
-class FoxifyCodeLens {
+class TinyprobeCodeLens {
   /** @param {import('./inspector').Inspector} inspector */
   constructor(inspector, cwdFor) {
     this.inspector = inspector;
@@ -32,7 +32,7 @@ class FoxifyCodeLens {
       lenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
         title: '$(play) Run workflow',
         tooltip: 'Run this workflow with the selected environment',
-        command: 'foxify.runWorkflow',
+        command: 'tinyprobe.runWorkflow',
         arguments: [document.uri]
       }));
     }
@@ -45,8 +45,8 @@ class FoxifyCodeLens {
       const { line } = protocol.toPosition(endpoint.location);
       lenses.push(new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
         title: `$(play) Call ${endpoint.method}`,
-        tooltip: `foxify call ${endpoint.name}`,
-        command: 'foxify.callEndpoint',
+        tooltip: `tinyprobe call ${endpoint.name}`,
+        command: 'tinyprobe.callEndpoint',
         arguments: [document.uri, endpoint.name]
       }));
     }
@@ -54,4 +54,4 @@ class FoxifyCodeLens {
   }
 }
 
-module.exports = { FoxifyCodeLens };
+module.exports = { TinyprobeCodeLens };

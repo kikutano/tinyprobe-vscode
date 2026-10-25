@@ -4,8 +4,8 @@ name: Release
 #   git tag -a v0.1.0 --cleanup=whitespace -F notes.md
 #   git push origin v0.1.0
 # The tag message after its first line is used as the top of the release notes.
-# The .vsix is attached as foxify-vscode.vsix, so this link always gets the latest one:
-#   https://github.com/kikutano/foxify-vscode/releases/latest/download/foxify-vscode.vsix
+# The .vsix is attached as tinyprobe-vscode.vsix, so this link always gets the latest one:
+#   https://github.com/kikutano/tinyprobe-vscode/releases/latest/download/tinyprobe-vscode.vsix
 on:
   push:
     tags: ['v*.*.*']
@@ -33,7 +33,7 @@ jobs:
       - run: npm test
 
       - name: Package
-        run: npm run package -- --out foxify-vscode.vsix
+        run: npm run package -- --out tinyprobe-vscode.vsix
 
       # The body of an annotated tag (everything after its first line) goes on top of the
       # generated notes. A lightweight tag, or one with a single line, adds nothing.
@@ -45,7 +45,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: foxify-vscode.vsix
+          files: tinyprobe-vscode.vsix
           body_path: ${{ runner.temp }}/tag-notes.md
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}

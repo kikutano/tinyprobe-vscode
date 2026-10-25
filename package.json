@@ -1,18 +1,18 @@
 {
-  "name": "foxify-vscode",
-  "displayName": "Foxify",
-  "description": "Explore endpoints and run Foxify API workflows from VS Code: validation as you save, one-click calls, results in the Test Explorer.",
-  "version": "0.1.0",
+  "name": "tinyprobe-vscode",
+  "displayName": "tinyprobe",
+  "description": "Explore endpoints and run tinyprobe API workflows from VS Code: validation as you save, one-click calls, results in the Test Explorer.",
+  "version": "0.2.0",
   "publisher": "kikutano",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kikutano/foxify-vscode"
+    "url": "https://github.com/kikutano/tinyprobe-vscode"
   },
   "bugs": {
-    "url": "https://github.com/kikutano/foxify-vscode/issues"
+    "url": "https://github.com/kikutano/tinyprobe-vscode/issues"
   },
-  "homepage": "https://github.com/kikutano/foxify-vscode#readme",
+  "homepage": "https://github.com/kikutano/tinyprobe-vscode#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -26,7 +26,7 @@
     "http",
     "rest",
     "yaml",
-    "foxify"
+    "tinyprobe"
   ],
   "main": "./src/extension.js",
   "activationEvents": [
@@ -37,69 +37,69 @@
   "contributes": {
     "commands": [
       {
-        "command": "foxify.runWorkflow",
+        "command": "tinyprobe.runWorkflow",
         "title": "Run Workflow",
-        "category": "Foxify",
+        "category": "tinyprobe",
         "icon": "$(play)"
       },
       {
-        "command": "foxify.callEndpoint",
+        "command": "tinyprobe.callEndpoint",
         "title": "Call Endpoint",
-        "category": "Foxify"
+        "category": "tinyprobe"
       },
       {
-        "command": "foxify.selectEnvironment",
+        "command": "tinyprobe.selectEnvironment",
         "title": "Select Environment",
-        "category": "Foxify"
+        "category": "tinyprobe"
       },
       {
-        "command": "foxify.showRun",
+        "command": "tinyprobe.showRun",
         "title": "Show Last Run",
-        "category": "Foxify"
+        "category": "tinyprobe"
       },
       {
-        "command": "foxify.validate",
+        "command": "tinyprobe.validate",
         "title": "Validate File",
-        "category": "Foxify"
+        "category": "tinyprobe"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "foxify.runWorkflow",
+          "command": "tinyprobe.runWorkflow",
           "when": "editorLangId == yaml"
         },
         {
-          "command": "foxify.callEndpoint",
+          "command": "tinyprobe.callEndpoint",
           "when": "editorLangId == yaml"
         },
         {
-          "command": "foxify.validate",
+          "command": "tinyprobe.validate",
           "when": "editorLangId == yaml"
         }
       ],
       "editor/title/run": [
         {
-          "command": "foxify.runWorkflow",
-          "when": "resourceLangId == yaml && foxify.isWorkflow",
+          "command": "tinyprobe.runWorkflow",
+          "when": "resourceLangId == yaml && tinyprobe.isWorkflow",
           "group": "navigation"
         }
       ]
     },
     "configuration": {
-      "title": "Foxify",
+      "title": "tinyprobe",
       "properties": {
-        "foxify.path": {
+        "tinyprobe.path": {
           "type": "string",
-          "default": "foxify",
-          "markdownDescription": "Path of the `foxify` binary. The default finds it on the `PATH`. Install it with the [one-line installer](https://github.com/kikutano/foxify#install)."
+          "default": "tinyprobe",
+          "markdownDescription": "Path of the `tinyprobe` binary. The default finds it on the `PATH`. Install it with the [one-line installer](https://github.com/kikutano/tinyprobe#install)."
         },
-        "foxify.validateOnSave": {
+        "tinyprobe.validateOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Validate Foxify files when they are opened and saved, and show the problems in the editor."
+          "description": "Validate tinyprobe files when they are opened and saved, and show the problems in the editor."
         },
-        "foxify.variables": {
+        "tinyprobe.variables": {
           "type": "object",
           "default": {},
           "additionalProperties": {

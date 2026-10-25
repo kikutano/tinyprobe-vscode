@@ -1,4 +1,4 @@
-// The run view: renders the NDJSON events of `foxify run` / `foxify call` (docs/protocol.md).
+// The run view: renders the NDJSON events of `tinyprobe run` / `tinyprobe call` (docs/protocol.md).
 // Plain browser JavaScript with no VS Code API except the bootstrap at the end, so the same
 // file can serve a browser UI. Every value from the run is set with textContent, never as HTML.
 (function () {
@@ -107,7 +107,7 @@
     function header() {
       const node = element('header', 'header');
       const title = element('div', 'title');
-      title.append(element('span', 'logo', '⚡'), element('span', 'name', state.title || 'Foxify'));
+      title.append(element('span', 'logo', '⚡'), element('span', 'name', state.title || 'tinyprobe'));
       node.append(title);
 
       const meta = element('div', 'meta');
@@ -144,7 +144,7 @@
     function body() {
       if (state.error) return message('error', state.error);
       if (state.invalid) return problems(state.invalid.errors);
-      if (state.steps.length === 0) return message('muted', 'Waiting for foxify…');
+      if (state.steps.length === 0) return message('muted', 'Waiting for tinyprobe…');
 
       const node = element('main', 'layout');
       node.append(stepList(), details());
@@ -266,7 +266,7 @@
   // --- Bootstrap -----------------------------------------------------------
 
   const view = createRunView(document.getElementById('app'));
-  window.foxifyRunView = view;
+  window.tinyprobeRunView = view;
 
   window.addEventListener('message', ({ data }) => {
     if (data.type === 'reset') view.reset(data.title, data.environment);

@@ -1,6 +1,6 @@
 'use strict';
 
-// The Foxify JSON protocol (https://github.com/kikutano/foxify/blob/main/docs/protocol.md),
+// The tinyprobe JSON protocol (https://github.com/kikutano/tinyprobe/blob/main/docs/protocol.md),
 // without any VS Code API: everything here runs, and is tested, with plain Node.
 
 const path = require('node:path');
@@ -8,8 +8,8 @@ const path = require('node:path');
 /** The protocol version this extension understands. */
 const SUPPORTED_PROTOCOL = 1;
 
-/** The first Foxify version with `inspect`, `call` and `--reporter ndjson`. */
-const MINIMUM_VERSION = '0.9.0';
+/** The first version of the binary named `tinyprobe`, with `inspect`, `call` and `--reporter ndjson`. */
+const MINIMUM_VERSION = '0.10.0';
 
 /**
  * Splits text that arrives in chunks into lines: NDJSON events can be cut anywhere
@@ -41,8 +41,8 @@ class LineSplitter {
   }
 }
 
-/** A Foxify file defines endpoints or steps at the top level; other YAML files are left alone. */
-function isFoxifyFile(text) {
+/** A tinyprobe file defines endpoints or steps at the top level; other YAML files are left alone. */
+function isTinyprobeFile(text) {
   return /^(endpoints|steps)[ \t]*:/m.test(text);
 }
 
@@ -69,12 +69,12 @@ function commonArgs({ environment, variables } = {}) {
   ];
 }
 
-/** Arguments of `foxify run` with the NDJSON reporter. */
+/** Arguments of `tinyprobe run` with the NDJSON reporter. */
 function runArgs(file, options) {
   return ['run', file, ...commonArgs(options)];
 }
 
-/** Arguments of `foxify call`; `args` are `[name, value]` pairs, values typed like YAML. */
+/** Arguments of `tinyprobe call`; `args` are `[name, value]` pairs, values typed like YAML. */
 function callArgs(file, endpoint, args, options) {
   return [
     'call', file, endpoint,
@@ -83,7 +83,7 @@ function callArgs(file, endpoint, args, options) {
   ];
 }
 
-/** Locations are relative to the directory foxify ran in, unless the file is outside it. */
+/** Locations are relative to the directory tinyprobe ran in, unless the file is outside it. */
 function resolveFile(cwd, file) {
   return path.isAbsolute(file) ? path.normalize(file) : path.resolve(cwd, file);
 }
@@ -109,7 +109,7 @@ function toPosition(location) {
 function problemsByFile(cwd, errors) {
   const byFile = new Map();
   for (const error of errors ?? []) {
-    // "command line" problems (foxify call arguments) belong to no file.
+    // "command line" problems (tinyprobe call arguments) belong to no file.
     if (error.file === 'command line') continue;
     const file = resolveFile(cwd, error.file);
     if (!byFile.has(file)) byFile.set(file, []);
@@ -173,7 +173,7 @@ module.exports = {
   SUPPORTED_PROTOCOL,
   MINIMUM_VERSION,
   LineSplitter,
-  isFoxifyFile,
+  isTinyprobeFile,
   isWorkflowFile,
   isEnvironmentFileName,
   runArgs,

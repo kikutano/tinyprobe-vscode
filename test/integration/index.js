@@ -1,8 +1,8 @@
 'use strict';
 
-// Integration tests, run inside VS Code (see test/integration/run.js). They need a foxify binary
-// (FOXIFY_PATH) and the Foxify test server on http://localhost:5122, and use a workspace with the
-// example files of the foxify repository.
+// Integration tests, run inside VS Code (see test/integration/run.js). They need a tinyprobe binary
+// (TINYPROBE_PATH) and the tinyprobe test server on http://localhost:5122, and use a workspace with the
+// example files of the tinyprobe repository.
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -36,14 +36,14 @@ async function run() {
   const api = file('api/testserver.yaml');
   const users = file('workflows/users.yaml');
 
-  const extension = vscode.extensions.getExtension('kikutano.foxify-vscode');
-  const foxify = await extension.activate();
-  await foxify.foxify.context.workspaceState.update('foxify.environment', path.join(root, 'environment.yaml'));
-  foxify.foxify.updateStatus();
+  const extension = vscode.extensions.getExtension('kikutano.tinyprobe-vscode');
+  const tinyprobe = await extension.activate();
+  await tinyprobe.tinyprobe.context.workspaceState.update('tinyprobe.environment', path.join(root, 'environment.yaml'));
+  tinyprobe.tinyprobe.updateStatus();
 
   await check('an API file is inspected when opened', async () => {
     await vscode.window.showTextDocument(api);
-    const json = await waitFor(() => foxify.inspector.get(api.fsPath), 'the inspection of the API file');
+    const json = await waitFor(() => tinyprobe.inspector.get(api.fsPath), 'the inspection of the API file');
     assert.equal(json.kind, 'api');
     assert.ok(json.endpoints.length > 10);
     assert.deepEqual(vscode.languages.getDiagnostics(api), []);
@@ -51,8 +51,8 @@ async function run() {
 
   await check('each endpoint has a Call CodeLens on its line', async () => {
     const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', api);
-    const json = foxify.inspector.get(api.fsPath);
-    const calls = lenses.filter(l => l.command?.command === 'foxify.callEndpoint');
+    const json = tinyprobe.inspector.get(api.fsPath);
+    const calls = lenses.filter(l => l.command?.command === 'tinyprobe.callEndpoint');
     assert.equal(calls.length, json.endpoints.length);
     const login = calls.find(l => l.command.arguments[1] === 'login');
     const loginLine = json.endpoints.find(e => e.name === 'login').location.line - 1;
@@ -61,12 +61,12 @@ async function run() {
 
   await check('a workflow gets a Run CodeLens and no Call lens for imported endpoints', async () => {
     await vscode.window.showTextDocument(users);
-    await waitFor(() => foxify.inspector.get(users.fsPath), 'the inspection of the workflow');
+    await waitFor(() => tinyprobe.inspector.get(users.fsPath), 'the inspection of the workflow');
     const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', users);
-    assert.deepEqual(lenses.map(l => l.command?.command), ['foxify.runWorkflow']);
+    assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow']);
   });
 
-  await check('problems are shown where they are, with the message of foxify', async () => {
+  await check('problems are shown where they are, with the message of tinyprobe', async () => {
     const broken = file('workflows/broken.yaml');
     fs.writeFileSync(broken.fsPath, 'import: [../api/testserver.yaml]\nsteps:\n  - call: get_usr\n    with:\n      id: 1\n');
     await vscode.window.showTextDocument(broken);
@@ -80,25 +80,25 @@ async function run() {
 
     fs.writeFileSync(broken.fsPath, 'import: [../api/testserver.yaml]\nsteps:\n  - call: get_user\n    with:\n      id: 1\n');
     await vscode.commands.executeCommand('workbench.action.files.revert');
-    await foxify.inspector.inspect(broken);
+    await tinyprobe.inspector.inspect(broken);
     assert.deepEqual(vscode.languages.getDiagnostics(broken), []);
     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     fs.unlinkSync(broken.fsPath);
   });
 
   await check('workflows are discovered as tests, with one child per call step', async () => {
-    await foxify.tests.discover();
-    const item = foxify.tests.controller.items.get(users.toString());
+    await tinyprobe.tests.discover();
+    const item = tinyprobe.tests.controller.items.get(users.toString());
     assert.ok(item, 'users.yaml is a test item');
-    await foxify.tests.resolveSteps(item);
-    const json = foxify.inspector.get(users.fsPath);
+    await tinyprobe.tests.resolveSteps(item);
+    const json = tinyprobe.inspector.get(users.fsPath);
     assert.equal(item.children.size, json.steps.filter(s => s.type === 'call').length);
     assert.equal(item.label, json.name);
   });
 
   await check('running a workflow streams its events to the run view', async () => {
-    await vscode.commands.executeCommand('foxify.runWorkflow', users);
-    const events = foxify.runView.events;
+    await vscode.commands.executeCommand('tinyprobe.runWorkflow', users);
+    const events = tinyprobe.runView.events;
     assert.equal(events[0].event, 'run_started');
     const finished = events.at(-1);
     assert.equal(finished.event, 'run_finished');
@@ -107,36 +107,36 @@ async function run() {
   });
 
   await check('a call shows the response, whatever the status', async () => {
-    await foxify.caller.send(api, 'status', [['code', '404']]);
-    const completed = foxify.runView.events.find(e => e.event === 'step_completed');
+    await tinyprobe.caller.send(api, 'status', [['code', '404']]);
+    const completed = tinyprobe.runView.events.find(e => e.event === 'step_completed');
     assert.equal(completed.success, true);
     assert.equal(completed.status, 404);
     assert.match(completed.response.body, /simulated HTTP 404/);
   });
 
   await check('a call with a missing required param is reported, not sent', async () => {
-    await foxify.caller.send(api, 'create_user', [['firstName', 'Ada']]);
-    const invalid = foxify.runView.events.find(e => e.event === 'invalid');
+    await tinyprobe.caller.send(api, 'create_user', [['firstName', 'Ada']]);
+    const invalid = tinyprobe.runView.events.find(e => e.event === 'invalid');
     assert.ok(invalid, 'an invalid event');
     assert.match(invalid.errors[0].message, /missing required param 'lastName'/);
   });
 
   await check('without a chosen environment, a run first asks for one; dismissing it cancels the run', async () => {
-    const state = foxify.foxify.context.workspaceState;
-    const chosen = state.get('foxify.environment');
-    await state.update('foxify.environment', undefined);
+    const state = tinyprobe.tinyprobe.context.workspaceState;
+    const chosen = state.get('tinyprobe.environment');
+    await state.update('tinyprobe.environment', undefined);
     try {
-      assert.equal(foxify.foxify.hasChosenEnvironment(), false);
-      const asked = foxify.foxify.ensureEnvironment();
+      assert.equal(tinyprobe.tinyprobe.hasChosenEnvironment(), false);
+      const asked = tinyprobe.tinyprobe.ensureEnvironment();
       await new Promise(resolve => setTimeout(resolve, 1000));
       await vscode.commands.executeCommand('workbench.action.closeQuickOpen');
       assert.equal(await asked, false);
 
-      await state.update('foxify.environment', '');
-      assert.equal(foxify.foxify.hasChosenEnvironment(), true, '"No environment" is a choice');
-      assert.equal(await foxify.foxify.ensureEnvironment(), true);
+      await state.update('tinyprobe.environment', '');
+      assert.equal(tinyprobe.tinyprobe.hasChosenEnvironment(), true, '"No environment" is a choice');
+      assert.equal(await tinyprobe.tinyprobe.ensureEnvironment(), true);
     } finally {
-      await state.update('foxify.environment', chosen);
+      await state.update('tinyprobe.environment', chosen);
     }
   });
 

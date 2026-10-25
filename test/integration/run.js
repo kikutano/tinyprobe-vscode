@@ -2,10 +2,10 @@
 
 // Runs the integration tests in a separate VS Code instance, with no dependency to install:
 //
-//   FOXIFY_PATH=/path/to/foxify FOXIFY_EXAMPLES=/path/to/foxify/docs node test/integration/run.js
+//   TINYPROBE_PATH=/path/to/tinyprobe TINYPROBE_EXAMPLES=/path/to/tinyprobe/docs node test/integration/run.js
 //
-// FOXIFY_EXAMPLES is the docs folder of the foxify repository (example/api, example/workflows and
-// environment.yaml); the Foxify test server must be running on http://localhost:5122.
+// TINYPROBE_EXAMPLES is the docs folder of the tinyprobe repository (example/api, example/workflows and
+// environment.yaml); the tinyprobe test server must be running on http://localhost:5122.
 // VS Code is found next to the `code` command on the PATH, or set VSCODE_PATH to its executable.
 
 const { spawnSync } = require('node:child_process');
@@ -13,19 +13,19 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const examples = process.env.FOXIFY_EXAMPLES;
-if (!process.env.FOXIFY_PATH || !examples) {
-  console.error('Set FOXIFY_PATH (the foxify binary) and FOXIFY_EXAMPLES (the docs folder of the foxify repository).');
+const examples = process.env.TINYPROBE_EXAMPLES;
+if (!process.env.TINYPROBE_PATH || !examples) {
+  console.error('Set TINYPROBE_PATH (the tinyprobe binary) and TINYPROBE_EXAMPLES (the docs folder of the tinyprobe repository).');
   process.exit(2);
 }
 
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'foxify-vscode-'));
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'tinyprobe-vscode-'));
 const workspace = path.join(temp, 'workspace');
 fs.cpSync(path.join(examples, 'example'), workspace, { recursive: true });
 fs.copyFileSync(path.join(examples, 'environment.yaml'), path.join(workspace, 'environment.yaml'));
 // Set before VS Code starts, so the extension uses this binary from its activation.
 fs.mkdirSync(path.join(workspace, '.vscode'));
-fs.writeFileSync(path.join(workspace, '.vscode', 'settings.json'), JSON.stringify({ 'foxify.path': process.env.FOXIFY_PATH }, null, 2));
+fs.writeFileSync(path.join(workspace, '.vscode', 'settings.json'), JSON.stringify({ 'tinyprobe.path': process.env.TINYPROBE_PATH }, null, 2));
 
 const extension = path.resolve(__dirname, '..', '..');
 const code = process.env.VSCODE_PATH || findVsCode();

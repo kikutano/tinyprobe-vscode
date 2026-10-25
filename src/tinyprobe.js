@@ -6,23 +6,23 @@ const fs = require('node:fs');
 const cli = require('./cli');
 const protocol = require('./protocol');
 
-const INSTALL_URL = 'https://github.com/kikutano/foxify#install';
-const ENVIRONMENT_KEY = 'foxify.environment';
+const INSTALL_URL = 'https://github.com/kikutano/tinyprobe#install';
+const ENVIRONMENT_KEY = 'tinyprobe.environment';
 const IGNORED_FOLDERS = '**/{node_modules,bin,obj,.git}/**';
 
 /**
  * What every feature shares: the binary and its settings, the output channel,
  * the selected environment file and the --var variables.
  */
-class Foxify {
+class Tinyprobe {
   /** @param {vscode.ExtensionContext} context */
   constructor(context) {
     this.context = context;
-    this.output = vscode.window.createOutputChannel('Foxify');
+    this.output = vscode.window.createOutputChannel('tinyprobe');
     this.warned = new Set();
 
     this.status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
-    this.status.command = 'foxify.selectEnvironment';
+    this.status.command = 'tinyprobe.selectEnvironment';
     this.updateStatus();
     this.status.show();
   }
@@ -33,10 +33,10 @@ class Foxify {
   }
 
   command() {
-    return vscode.workspace.getConfiguration('foxify').get('path') || 'foxify';
+    return vscode.workspace.getConfiguration('tinyprobe').get('path') || 'tinyprobe';
   }
 
-  /** foxify runs in the workspace folder, so the locations it reports are relative to it. */
+  /** tinyprobe runs in the workspace folder, so the locations it reports are relative to it. */
   cwdFor(uri) {
     return vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath ?? path.dirname(uri.fsPath);
   }
@@ -45,7 +45,7 @@ class Foxify {
   runOptions() {
     return {
       environment: this.environment(),
-      variables: vscode.workspace.getConfiguration('foxify').get('variables') ?? {}
+      variables: vscode.workspace.getConfiguration('tinyprobe').get('variables') ?? {}
     };
   }
 
@@ -56,18 +56,18 @@ class Foxify {
   /** Shows a problem with the binary once per session, with a way to fix it. */
   async reportError(error) {
     this.log(String(error.message ?? error));
-    if (!(error instanceof cli.FoxifyNotFoundError)) {
-      vscode.window.showErrorMessage(`Foxify: ${error.message ?? error}`);
+    if (!(error instanceof cli.TinyprobeNotFoundError)) {
+      vscode.window.showErrorMessage(`tinyprobe: ${error.message ?? error}`);
       return;
     }
     if (this.warned.has('missing')) return;
     this.warned.add('missing');
 
     const choice = await vscode.window.showWarningMessage(
-      `Foxify CLI not found ('${error.command}'). Install it, or set its path in the settings.`,
+      `tinyprobe CLI not found ('${error.command}'). Install it, or set its path in the settings.`,
       'How to install', 'Open settings');
     if (choice === 'How to install') vscode.env.openExternal(vscode.Uri.parse(INSTALL_URL));
-    if (choice === 'Open settings') vscode.commands.executeCommand('workbench.action.openSettings', 'foxify.path');
+    if (choice === 'Open settings') vscode.commands.executeCommand('workbench.action.openSettings', 'tinyprobe.path');
   }
 
   /** Warns, once, when the binary is too old or speaks a newer protocol than this extension. */
@@ -81,10 +81,10 @@ class Foxify {
     }
 
     const version = result.stdout.trim();
-    this.log(`Using foxify ${version} (${this.command()})`);
+    this.log(`Using tinyprobe ${version} (${this.command()})`);
     if (!protocol.isSupportedVersion(version)) {
       vscode.window.showWarningMessage(
-        `This extension needs Foxify ${protocol.MINIMUM_VERSION} or newer, and found ${version}. Run 'foxify update'.`);
+        `This extension needs tinyprobe ${protocol.MINIMUM_VERSION} or newer, and found ${version}. Run 'tinyprobe update'.`);
     }
   }
 
@@ -92,7 +92,7 @@ class Foxify {
     if (json.protocol > protocol.SUPPORTED_PROTOCOL && !this.warned.has('protocol')) {
       this.warned.add('protocol');
       vscode.window.showWarningMessage(
-        `Foxify ${json.version} speaks protocol ${json.protocol}; this extension knows protocol ${protocol.SUPPORTED_PROTOCOL}. Update the extension.`);
+        `tinyprobe ${json.version} speaks protocol ${json.protocol}; this extension knows protocol ${protocol.SUPPORTED_PROTOCOL}. Update the extension.`);
     }
   }
 
@@ -115,8 +115,8 @@ class Foxify {
     const file = this.environment();
     this.status.text = `$(server-environment) ${file ? path.basename(file) : 'No environment'}`;
     this.status.tooltip = file
-      ? `Foxify environment: ${vscode.workspace.asRelativePath(file)}\nClick to change it`
-      : 'Foxify: select the environment file passed with -e';
+      ? `tinyprobe environment: ${vscode.workspace.asRelativePath(file)}\nClick to change it`
+      : 'tinyprobe: select the environment file passed with -e';
   }
 
   async environmentFiles() {
@@ -141,7 +141,7 @@ class Foxify {
     ];
 
     const picked = await vscode.window.showQuickPick(items, {
-      title: reason ?? 'Foxify environment',
+      title: reason ?? 'tinyprobe environment',
       placeHolder: files.length === 0 ? 'No env*.yaml file found in the workspace' : 'The file passed with -e to every run and call',
       ignoreFocusOut: !!reason
     });
@@ -160,7 +160,7 @@ class Foxify {
   async ensureEnvironment() {
     if (this.hasChosenEnvironment()) return true;
     if ((await this.environmentFiles()).length === 0) return true;
-    return this.selectEnvironment({ reason: 'Foxify: which environment should this run use?' });
+    return this.selectEnvironment({ reason: 'tinyprobe: which environment should this run use?' });
   }
 
   /**
@@ -174,12 +174,12 @@ class Foxify {
     const file = this.environment();
     const variables = names.map(n => `'${n}'`).join(', ');
     const message = file
-      ? `Foxify: ${variables} ${names.length === 1 ? 'is' : 'are'} not defined. Add ${names.length === 1 ? 'it' : 'them'} to ${path.basename(file)}, to the workflow's variables or to foxify.variables, or pick another environment.`
-      : `Foxify: ${variables} ${names.length === 1 ? 'is' : 'are'} not defined, and no environment file is selected.`;
+      ? `tinyprobe: ${variables} ${names.length === 1 ? 'is' : 'are'} not defined. Add ${names.length === 1 ? 'it' : 'them'} to ${path.basename(file)}, to the workflow's variables or to tinyprobe.variables, or pick another environment.`
+      : `tinyprobe: ${variables} ${names.length === 1 ? 'is' : 'are'} not defined, and no environment file is selected.`;
 
     const choice = await vscode.window.showWarningMessage(message, 'Select environment');
     if (choice === 'Select environment') await this.selectEnvironment();
   }
 }
 
-module.exports = { Foxify, IGNORED_FOLDERS };
+module.exports = { Tinyprobe, IGNORED_FOLDERS };
