@@ -56,7 +56,7 @@ class RunView {
       localResourceRoots: [media],
       retainContextWhenHidden: true
     });
-    this.panel.iconPath = vscode.Uri.joinPath(media, 'icon.svg');
+    this.panel.iconPath = { light: vscode.Uri.joinPath(media, 'icon-light.svg'), dark: vscode.Uri.joinPath(media, 'icon-dark.svg') };
     this.panel.webview.html = this.html(this.panel.webview, media);
     this.panel.onDidDispose(() => { this.panel = undefined; });
     this.panel.webview.onDidReceiveMessage(message => {

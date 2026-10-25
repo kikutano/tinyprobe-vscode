@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- The tinyprobe icon: a shell prompt followed by a check mark, in the Extensions view, on the Marketplace page and on the run view tab (with a light and a dark variant).
+
 ## 0.2.0
 
 The extension is now named **tinyprobe**, like the CLI. It needs tinyprobe 0.10.0 or newer.
