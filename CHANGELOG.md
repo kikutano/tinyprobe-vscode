@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Published on the VS Code Marketplace and Open VSX: search for **tinyprobe** in the Extensions view.
+
 ## 0.2.1
 
 - The tinyprobe icon: a shell prompt followed by a check mark, in the Extensions view, on the Marketplace page and on the run view tab (with a light and a dark variant).

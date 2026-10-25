@@ -16,14 +16,13 @@ The extension has no runtime dependency and no engine of its own: it runs the `t
 
 ## Install
 
-Download `tinyprobe-vscode.vsix` from the [latest release](https://github.com/kikutano/tinyprobe-vscode/releases/latest) and install it:
+Search for **tinyprobe** in the Extensions view of VS Code, or install it from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=kikutano.tinyprobe-vscode). Cursor, Windsurf and VSCodium find it on [Open VSX](https://open-vsx.org/extension/kikutano/tinyprobe-vscode). From a terminal:
 
 ```bash
-curl -fsSLO https://github.com/kikutano/tinyprobe-vscode/releases/latest/download/tinyprobe-vscode.vsix
-code --install-extension tinyprobe-vscode.vsix
+code --install-extension kikutano.tinyprobe-vscode
 ```
 
-Or in VS Code: **Extensions** → **⋯** → **Install from VSIX...**. To update, install the new `.vsix` the same way.
+Every release also has the `.vsix` on [GitHub](https://github.com/kikutano/tinyprobe-vscode/releases/latest), to install with **Extensions** → **⋯** → **Install from VSIX...**.
 
 To try it right away, open the [example](https://github.com/kikutano/tinyprobe/tree/main/example) folder of the tinyprobe repository: it calls a public test API, so there is nothing else to install.
 

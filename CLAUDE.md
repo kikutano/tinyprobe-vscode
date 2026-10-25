@@ -40,4 +40,4 @@ There is a single roadmap for the CLI and this extension: `ROADMAP.md` in the ti
 
 ## Release
 
-Version in `package.json` and `CHANGELOG.md`, then an annotated tag `vX.Y.Z` (`git tag -a v0.2.0 --cleanup=whitespace -F notes.md`); the Release workflow publishes the `.vsix` on GitHub. The extension is **not on the VS Code Marketplace / Open VSX yet**.
+Version in `package.json` and `CHANGELOG.md`, then an annotated tag `vX.Y.Z` (`git tag -a v0.2.0 --cleanup=whitespace -F notes.md`); the Release workflow publishes the `.vsix` on GitHub. The workflow also publishes to Open VSX (`OVSX_PAT`). The VS Code Marketplace gets the `.vsix` by hand, on the publisher page (https://marketplace.visualstudio.com/manage).
