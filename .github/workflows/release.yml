@@ -17,6 +17,10 @@ jobs:
   release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
+    # Publishing to the stores is skipped until these secrets exist (ROADMAP M0-7).
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,3 +53,12 @@ jobs:
           body_path: ${{ runner.temp }}/tag-notes.md
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+      # The same .vsix as the GitHub Release. Pre-releases (v0.3.0-beta.1) stay on GitHub only.
+      - name: Publish to the VS Code Marketplace
+        if: env.VSCE_PAT != '' && !contains(github.ref_name, '-')
+        run: npx --yes @vscode/vsce publish --packagePath tinyprobe-vscode.vsix
+
+      - name: Publish to Open VSX
+        if: env.OVSX_PAT != '' && !contains(github.ref_name, '-')
+        run: npx --yes ovsx publish tinyprobe-vscode.vsix
