@@ -4,3 +4,6 @@ test/**
 .gitignore
 **/*.vsix
 media/screen.png
+scripts/**
+CLAUDE.md
+.claude/**
