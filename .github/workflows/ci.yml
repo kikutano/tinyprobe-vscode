@@ -24,7 +24,7 @@ jobs:
           node-version: '22'
       - run: npm test
 
-  # The extension in a real VS Code, with the latest foxify release, against the Foxify test
+  # The extension in a real VS Code, with the latest tinyprobe release, against the tinyprobe test
   # server of the same version (its examples are the test workspace).
   integration:
     name: Integration tests
@@ -39,15 +39,15 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install foxify
-        run: curl -fsSL https://raw.githubusercontent.com/kikutano/foxify/main/install.sh | sh
+      - name: Install tinyprobe
+        run: curl -fsSL https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.sh | sh
 
-      - name: Get the foxify sources of the installed version
-        run: git clone --depth 1 --branch "v$("$HOME/.local/bin/foxify" --version)" https://github.com/kikutano/foxify foxify-src
+      - name: Get the tinyprobe sources of the installed version
+        run: git clone --depth 1 --branch "v$("$HOME/.local/bin/tinyprobe" --version)" https://github.com/kikutano/tinyprobe tinyprobe-src
 
-      - name: Start the Foxify test server
+      - name: Start the tinyprobe test server
         run: |
-          dotnet run --project foxify-src/tests/Foxify.RealServer.Tests --urls http://localhost:5122 > server.log 2>&1 &
+          dotnet run --project tinyprobe-src/tests/Tinyprobe.RealServer.Tests --urls http://localhost:5122 > server.log 2>&1 &
           for i in $(seq 1 120); do
             curl -sf -o /dev/null http://localhost:5122/api/public && exit 0
             sleep 1
@@ -60,9 +60,9 @@ jobs:
           mkdir vscode && tar -xzf vscode.tar.gz -C vscode --strip-components=1
 
       - name: Integration tests
-        run: FOXIFY_PATH="$HOME/.local/bin/foxify" xvfb-run -a node test/integration/run.js
+        run: TINYPROBE_PATH="$HOME/.local/bin/tinyprobe" xvfb-run -a node test/integration/run.js
         env:
-          FOXIFY_EXAMPLES: foxify-src/docs
+          TINYPROBE_EXAMPLES: tinyprobe-src/docs
           VSCODE_PATH: vscode/code
 
       - name: Test server log
@@ -81,5 +81,5 @@ jobs:
       - run: npm run package
       - uses: actions/upload-artifact@v4
         with:
-          name: foxify-vscode
+          name: tinyprobe-vscode
           path: '*.vsix'

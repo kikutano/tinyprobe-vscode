@@ -1,19 +1,19 @@
-# Foxify for VS Code
+# tinyprobe for VS Code
 
-VS Code extension for [Foxify](https://github.com/kikutano/foxify): validation on save, ▶ Call above endpoints, ▶ Run workflow, Test Explorer, run view.
-It has **no engine of its own**: every feature runs the `foxify` binary and reads its JSON protocol (`docs/protocol.md` in the foxify repository, cloned next to this one as `../tyfapi` or `../foxify`).
+VS Code extension for [tinyprobe](https://github.com/kikutano/tinyprobe): validation on save, ▶ Call above endpoints, ▶ Run workflow, Test Explorer, run view.
+It has **no engine of its own**: every feature runs the `tinyprobe` binary and reads its JSON protocol (`docs/protocol.md` in the tinyprobe repository, cloned next to this one, under any folder name).
 
 ## Commands
 
 ```bash
 scripts/dev.sh test          # unit tests, plain Node (node --test), no VS Code
-scripts/dev.sh integration   # builds foxify from ../tyfapi, starts its test server, runs the tests in a real VS Code window
+scripts/dev.sh integration   # builds tinyprobe from the repository next to this one, starts its test server, runs the tests in a real VS Code window
 scripts/dev.sh check         # both: run before every PR
-scripts/dev.sh package       # foxify-vscode.vsix
+scripts/dev.sh package       # tinyprobe-vscode.vsix
 scripts/dev.sh install       # package + install in your VS Code
 ```
 
-Node 22 is in `~/.local/bin` on this machine. F5 in VS Code starts an Extension Development Host (`.vscode/launch.json`); set `foxify.path` to `foxify-dev` (from `../tyfapi/scripts/dev.sh install`) to use the binary built from the sources.
+Node 22 is in `~/.local/bin` on this machine. F5 in VS Code starts an Extension Development Host (`.vscode/launch.json`); set `tinyprobe.path` to `tinyprobe-dev` (from `scripts/dev.sh install` in the tinyprobe repository) to use the binary built from the sources.
 
 ## Architecture
 
@@ -21,18 +21,18 @@ Plain JavaScript (CommonJS), no dependency, no build step.
 
 - `src/extension.js`: activation, commands, wiring.
 - `src/protocol.js` and `src/cli.js`: **no VS Code API**, unit-tested with Node. Protocol parsing, argument building, version checks (`MINIMUM_VERSION`, `SUPPORTED_PROTOCOL`), spawning the binary and splitting NDJSON. Put new logic here when it can live without `vscode`.
-- `src/foxify.js`: shared state: binary path, output channel, environment picker (status bar), `--var` settings.
-- `src/inspector.js`: `foxify inspect --json` → diagnostics and cached file model.
+- `src/tinyprobe.js`: shared state: binary path, output channel, environment picker (status bar), `--var` settings.
+- `src/inspector.js`: `tinyprobe inspect --json` → diagnostics and cached file model.
 - `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view.js` (webview; renders ndjson events in any browser, meant to be reused by other front ends).
-- `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the foxify repo.
+- `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the tinyprobe repo.
 
 ## Roadmap
 
-There is a single roadmap for the CLI and this extension: `ROADMAP.md` in the foxify repository (here it is only a link). Extension tasks are marked `ext`. Specs and decisions are in that repository too (`docs/specs/`, `docs/decisions/`).
+There is a single roadmap for the CLI and this extension: `ROADMAP.md` in the tinyprobe repository (here it is only a link). Extension tasks are marked `ext`. Specs and decisions are in that repository too (`docs/specs/`, `docs/decisions/`).
 
 ## Rules
 
-- Never reimplement Foxify logic (YAML parsing, checks, variable resolution): ask the binary. If the extension needs data the protocol lacks, add it to the protocol in the foxify repository first.
+- Never reimplement tinyprobe logic (YAML parsing, checks, variable resolution): ask the binary. If the extension needs data the protocol lacks, add it to the protocol in the tinyprobe repository first.
 - Ignore unknown protocol keys; warn when `protocol` is greater than `SUPPORTED_PROTOCOL`.
 - A feature that needs a newer binary raises `MINIMUM_VERSION` and the "Requirements" line of the README.
 - New user-facing behavior: README feature list + `CHANGELOG.md`.

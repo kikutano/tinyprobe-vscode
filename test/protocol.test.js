@@ -18,11 +18,11 @@ test('LineSplitter emits whole lines whatever the chunks', () => {
   assert.deepEqual(lines, ['{"event":"a"}', '{"event":"b"}', '{"event":"c"}']);
 });
 
-test('Foxify files are recognised by their top-level keys', () => {
-  assert.equal(protocol.isFoxifyFile('base_url: x\nendpoints:\n  a: { path: /a }\n'), true);
-  assert.equal(protocol.isFoxifyFile('name: x\nsteps:\n  - call: a\n'), true);
-  assert.equal(protocol.isFoxifyFile('services:\n  web:\n    image: nginx\n'), false);
-  assert.equal(protocol.isFoxifyFile('jobs:\n  build:\n    steps:\n      - run: make\n'), false, 'nested steps (GitHub Actions)');
+test('tinyprobe files are recognised by their top-level keys', () => {
+  assert.equal(protocol.isTinyprobeFile('base_url: x\nendpoints:\n  a: { path: /a }\n'), true);
+  assert.equal(protocol.isTinyprobeFile('name: x\nsteps:\n  - call: a\n'), true);
+  assert.equal(protocol.isTinyprobeFile('services:\n  web:\n    image: nginx\n'), false);
+  assert.equal(protocol.isTinyprobeFile('jobs:\n  build:\n    steps:\n      - run: make\n'), false, 'nested steps (GitHub Actions)');
 
   assert.equal(protocol.isWorkflowFile('steps:\n  - call: a\n'), true);
   assert.equal(protocol.isWorkflowFile('endpoints:\n  a: { path: /a }\n'), false);
@@ -30,7 +30,7 @@ test('Foxify files are recognised by their top-level keys', () => {
 
 test('Environment files are recognised by name', () => {
   for (const name of ['env.yaml', 'env.local.yaml', 'env.example.yml', 'env-dev.yaml', 'environment.yaml', 'ENV.Prod.YAML']) {
-    assert.equal(protocol.isEnvironmentFileName(path.join('foxify', name)), true, name);
+    assert.equal(protocol.isEnvironmentFileName(path.join('tinyprobe', name)), true, name);
   }
   for (const name of ['envoy.yaml', 'docker-compose.yaml', 'my-env.yaml', 'env.json']) {
     assert.equal(protocol.isEnvironmentFileName(name), false, name);
@@ -51,7 +51,7 @@ test('Locations become 0-based positions in absolute files', () => {
   const cwd = path.resolve('/work');
   assert.deepEqual(protocol.toPosition({ line: 4, column: 5 }), { line: 3, character: 4 });
   assert.deepEqual(protocol.toPosition({ line: 0, column: 0 }), { line: 0, character: 0 });
-  assert.equal(protocol.resolveFile(cwd, 'foxify/api.yaml'), path.join(cwd, 'foxify', 'api.yaml'));
+  assert.equal(protocol.resolveFile(cwd, 'tinyprobe/api.yaml'), path.join(cwd, 'tinyprobe', 'api.yaml'));
   assert.equal(protocol.resolveFile(cwd, path.join(cwd, 'x.yaml')), path.join(cwd, 'x.yaml'));
 });
 
@@ -105,9 +105,9 @@ test('Versions are compared by their numbers', () => {
   assert.equal(protocol.compareVersions('0.10.0', '0.9.0'), 1);
   assert.equal(protocol.compareVersions('0.9.0', '0.9.0'), 0);
   assert.equal(protocol.compareVersions('0.8.1', '0.9.0'), -1);
-  assert.equal(protocol.isSupportedVersion('0.9.0'), true);
+  assert.equal(protocol.isSupportedVersion('0.10.0'), true);
   assert.equal(protocol.isSupportedVersion('1.0.0-beta.1'), true);
-  assert.equal(protocol.isSupportedVersion('0.8.0'), false);
+  assert.equal(protocol.isSupportedVersion('0.9.0'), false);
   assert.equal(protocol.isSupportedVersion('0.0.0-dev'), true);
 });
 

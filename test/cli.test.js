@@ -4,7 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const cli = require('../src/cli');
 
-// Node itself stands in for the foxify binary: `node -e <script>` prints what foxify would.
+// Node itself stands in for the tinyprobe binary: `node -e <script>` prints what tinyprobe would.
 const node = process.execPath;
 
 test('stream parses each NDJSON event as it arrives, split across writes', async () => {
@@ -56,6 +56,6 @@ test('execute returns stdout and the exit code', async () => {
   assert.equal(stdout.trim(), '0.9.0');
 });
 
-test('a missing binary is a FoxifyNotFoundError', async () => {
-  await assert.rejects(cli.execute('foxify-does-not-exist', ['--version']), cli.FoxifyNotFoundError);
+test('a missing binary is a TinyprobeNotFoundError', async () => {
+  await assert.rejects(cli.execute('tinyprobe-does-not-exist', ['--version']), cli.TinyprobeNotFoundError);
 });

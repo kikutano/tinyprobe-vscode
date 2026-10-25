@@ -4,7 +4,7 @@ const vscode = require('vscode');
 const path = require('node:path');
 const cli = require('./cli');
 const protocol = require('./protocol');
-const { IGNORED_FOLDERS } = require('./foxify');
+const { IGNORED_FOLDERS } = require('./tinyprobe');
 
 /**
  * Workflows in the Test Explorer: a workflow file is a test suite, each call step a test.
@@ -12,15 +12,15 @@ const { IGNORED_FOLDERS } = require('./foxify');
  */
 class WorkflowTests {
   /**
-   * @param {import('./foxify').Foxify} foxify
+   * @param {import('./tinyprobe').Tinyprobe} tinyprobe
    * @param {import('./inspector').Inspector} inspector
    * @param {import('./runView').RunView} runView
    */
-  constructor(foxify, inspector, runView) {
-    this.foxify = foxify;
+  constructor(tinyprobe, inspector, runView) {
+    this.tinyprobe = tinyprobe;
     this.inspector = inspector;
     this.runView = runView;
-    this.controller = vscode.tests.createTestController('foxify', 'Foxify');
+    this.controller = vscode.tests.createTestController('tinyprobe', 'tinyprobe');
     this.controller.resolveHandler = item => (item ? this.resolveSteps(item) : this.discover());
     this.controller.refreshHandler = () => this.discover();
     this.controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => this.run(request, token), true);
@@ -77,7 +77,7 @@ class WorkflowTests {
   async resolveSteps(item) {
     const json = this.inspector.get(item.uri.fsPath) ?? await this.inspector.inspect(item.uri);
     if (json?.valid) this.setSteps(item, json);
-    else item.error = json ? 'The workflow is not valid: see the Problems panel' : 'foxify could not inspect this file';
+    else item.error = json ? 'The workflow is not valid: see the Problems panel' : 'tinyprobe could not inspect this file';
   }
 
   setSteps(item, json) {
@@ -114,7 +114,7 @@ class WorkflowTests {
     await this.update(uri);
     const item = this.controller.items.get(uri.toString());
     if (!item) {
-      vscode.window.showWarningMessage('Foxify: this file is not a workflow (it has no steps).');
+      vscode.window.showWarningMessage('tinyprobe: this file is not a workflow (it has no steps).');
       return;
     }
     const request = new vscode.TestRunRequest([item]);
@@ -127,7 +127,7 @@ class WorkflowTests {
   }
 
   async run(request, token, { reveal = false } = {}) {
-    if (!(await this.foxify.ensureEnvironment())) return;
+    if (!(await this.tinyprobe.ensureEnvironment())) return;
 
     const run = this.controller.createTestRun(request);
     const events = [];
@@ -140,7 +140,7 @@ class WorkflowTests {
       run.end();
     }
     // Not awaited: the message stays up while the run is already over.
-    this.foxify.explainUndefinedVariables(events);
+    this.tinyprobe.explainUndefinedVariables(events);
   }
 
   async runWorkflow(item, run, token, reveal) {
@@ -152,18 +152,18 @@ class WorkflowTests {
     });
     run.started(item);
 
-    const options = this.foxify.runOptions();
+    const options = this.tinyprobe.runOptions();
     const args = protocol.runArgs(item.uri.fsPath, options);
-    const cwd = this.foxify.cwdFor(item.uri);
-    this.foxify.log(`> foxify ${args.join(' ')}`);
-    run.appendOutput(`> foxify ${args.join(' ')}\r\n`, undefined, item);
+    const cwd = this.tinyprobe.cwdFor(item.uri);
+    this.tinyprobe.log(`> tinyprobe ${args.join(' ')}`);
+    run.appendOutput(`> tinyprobe ${args.join(' ')}\r\n`, undefined, item);
     this.runView.begin(item.label, { reveal, environment: options.environment });
 
     const completed = new Set();
     const events = [];
     let finished;
     let invalid;
-    const execution = cli.stream(this.foxify.command(), args, cwd, event => {
+    const execution = cli.stream(this.tinyprobe.command(), args, cwd, event => {
       events.push(event);
       this.runView.event(event);
       const child = steps.get(event.index);
@@ -197,7 +197,7 @@ class WorkflowTests {
     try {
       result = await execution.done;
     } catch (error) {
-      this.foxify.reportError(error);
+      this.tinyprobe.reportError(error);
       this.runView.error(error.message);
       run.errored(item, new vscode.TestMessage(error.message));
       return events;
@@ -226,7 +226,7 @@ class WorkflowTests {
     } else if (token.isCancellationRequested) {
       run.skipped(item);
     } else {
-      const message = result.stderr.trim() || `foxify exited with code ${result.code}`;
+      const message = result.stderr.trim() || `tinyprobe exited with code ${result.code}`;
       this.runView.error(message);
       run.errored(item, new vscode.TestMessage(message));
     }

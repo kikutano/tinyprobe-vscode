@@ -1,24 +1,24 @@
 #!/bin/sh
-# Development tasks for Foxify for VS Code.
+# Development tasks for tinyprobe for VS Code.
 #
 #   scripts/dev.sh <command>
 #
 # Commands:
 #   test          Unit tests (Node's test runner, no VS Code needed).
-#   integration   Integration tests in a separate VS Code instance, with the foxify binary
+#   integration   Integration tests in a separate VS Code instance, with the tinyprobe binary
 #                 built from the sources next to this folder and its test server.
 #   check         test + integration: run it before opening a pull request.
-#   package       Build foxify-vscode.vsix.
+#   package       Build tinyprobe-vscode.vsix.
 #   install       Package and install the .vsix in your VS Code.
 #
 # Environment variables:
-#   FOXIFY_REPO   the foxify repository (default: ../Foxify, ../foxify or ../tyfapi, whichever exists)
-#   FOXIFY_PATH   the foxify binary (default: the development build of FOXIFY_REPO)
-#   FOXIFY_PORT   port of the test server (default: 5122)
+#   TINYPROBE_REPO   the tinyprobe repository (default: the folder next to this one that contains Tinyprobe.slnx)
+#   TINYPROBE_PATH   the tinyprobe binary (default: the development build of TINYPROBE_REPO)
+#   TINYPROBE_PORT   port of the test server (default: 5122)
 set -eu
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-PORT="${FOXIFY_PORT:-5122}"
+PORT="${TINYPROBE_PORT:-5122}"
 BASE_URL="http://localhost:$PORT"
 
 fail() { echo "dev: $*" >&2; exit 1; }
@@ -26,18 +26,19 @@ step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 
 command -v node > /dev/null || fail "Node.js is needed (22 or newer)."
 
-foxify_repo() {
-  if [ -n "${FOXIFY_REPO:-}" ]; then
-    echo "$FOXIFY_REPO"
+tinyprobe_repo() {
+  if [ -n "${TINYPROBE_REPO:-}" ]; then
+    echo "$TINYPROBE_REPO"
     return
   fi
-  for candidate in "$ROOT/../Foxify" "$ROOT/../foxify" "$ROOT/../tyfapi"; do
-    if [ -f "$candidate/Foxify.slnx" ]; then
+  # Any folder next to this one: the clone may have another name than tinyprobe.
+  for candidate in "$ROOT"/../*/; do
+    if [ -f "$candidate/Tinyprobe.slnx" ]; then
       (cd "$candidate" && pwd)
       return
     fi
   done
-  fail "the foxify repository was not found next to this folder: set FOXIFY_REPO."
+  fail "the tinyprobe repository was not found next to this folder: set TINYPROBE_REPO."
 }
 
 unit_tests() {
@@ -56,18 +57,18 @@ stop_server() {
 }
 
 integration() {
-  repo=$(foxify_repo)
-  binary="${FOXIFY_PATH:-}"
+  repo=$(tinyprobe_repo)
+  binary="${TINYPROBE_PATH:-}"
   if [ -z "$binary" ]; then
-    step "foxify development binary ($repo)"
+    step "tinyprobe development binary ($repo)"
     "$repo/scripts/dev.sh" install
-    binary="$repo/.dev/foxify/foxify"
+    binary="$repo/.dev/tinyprobe/tinyprobe"
   fi
 
   if ! server_up; then
-    step "Start the Foxify test server on $BASE_URL"
+    step "Start the tinyprobe test server on $BASE_URL"
     log=$(mktemp)
-    dotnet run --project "$repo/tests/Foxify.RealServer.Tests" --urls "$BASE_URL" > "$log" 2>&1 &
+    dotnet run --project "$repo/tests/Tinyprobe.RealServer.Tests" --urls "$BASE_URL" > "$log" 2>&1 &
     SERVER_PID=$!
     trap stop_server EXIT INT TERM
     i=0
@@ -78,9 +79,9 @@ integration() {
     done
   fi
 
-  step "Integration tests (foxify $("$binary" --version))"
+  step "Integration tests (tinyprobe $("$binary" --version))"
   cd "$ROOT"
-  FOXIFY_PATH="$binary" FOXIFY_EXAMPLES="$repo/docs" node test/integration/run.js
+  TINYPROBE_PATH="$binary" TINYPROBE_EXAMPLES="$repo/docs" node test/integration/run.js
 }
 
 package() {

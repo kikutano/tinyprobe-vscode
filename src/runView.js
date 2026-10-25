@@ -39,7 +39,7 @@ class RunView {
     this.post({ type: 'event', event });
   }
 
-  /** Something went wrong outside the protocol (foxify missing, bad arguments). */
+  /** Something went wrong outside the protocol (tinyprobe missing, bad arguments). */
   error(message) {
     this.post({ type: 'error', message });
   }
@@ -51,7 +51,7 @@ class RunView {
     }
 
     const media = vscode.Uri.joinPath(this.context.extensionUri, 'media');
-    this.panel = vscode.window.createWebviewPanel('foxify.run', 'Foxify', { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
+    this.panel = vscode.window.createWebviewPanel('tinyprobe.run', 'tinyprobe', { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
       enableScripts: true,
       localResourceRoots: [media],
       retainContextWhenHidden: true
@@ -70,7 +70,7 @@ class RunView {
 
   post(message) {
     if (!this.panel) return;
-    this.panel.title = this.title ? `Foxify: ${this.title}` : 'Foxify';
+    this.panel.title = this.title ? `tinyprobe: ${this.title}` : 'tinyprobe';
     this.panel.webview.postMessage(message);
   }
 
@@ -85,7 +85,7 @@ class RunView {
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="${style}">
-  <title>Foxify</title>
+  <title>tinyprobe</title>
 </head>
 <body>
   <div id="app"></div>

@@ -1,14 +1,14 @@
 'use strict';
 
-// Runs the foxify binary. Plain Node: no VS Code API, so it can be reused by other front ends.
+// Runs the tinyprobe binary. Plain Node: no VS Code API, so it can be reused by other front ends.
 
 const { spawn } = require('node:child_process');
 const { LineSplitter } = require('./protocol');
 
-class FoxifyNotFoundError extends Error {
+class TinyprobeNotFoundError extends Error {
   constructor(command) {
-    super(`The foxify binary was not found ('${command}'). Install it or set foxify.path.`);
-    this.name = 'FoxifyNotFoundError';
+    super(`The tinyprobe binary was not found ('${command}'). Install it or set tinyprobe.path.`);
+    this.name = 'TinyprobeNotFoundError';
     this.command = command;
   }
 }
@@ -23,12 +23,12 @@ function start(command, args, cwd) {
 
 function exited(child, command, collect) {
   return new Promise((resolve, reject) => {
-    child.on('error', error => reject(error.code === 'ENOENT' ? new FoxifyNotFoundError(command) : error));
+    child.on('error', error => reject(error.code === 'ENOENT' ? new TinyprobeNotFoundError(command) : error));
     child.on('close', code => resolve({ code, ...collect() }));
   });
 }
 
-/** Runs foxify and returns its whole output: `--version`, `inspect --json`. */
+/** Runs tinyprobe and returns its whole output: `--version`, `inspect --json`. */
 async function execute(command, args, cwd) {
   const child = start(command, args, cwd);
   let stdout = '';
@@ -38,7 +38,7 @@ async function execute(command, args, cwd) {
   return exited(child, command, () => ({ stdout, stderr }));
 }
 
-/** `foxify inspect <file> --json`: the parsed document, or null when foxify printed no JSON (bad arguments). */
+/** `tinyprobe inspect <file> --json`: the parsed document, or null when tinyprobe printed no JSON (bad arguments). */
 async function inspect(command, file, cwd) {
   const { code, stdout, stderr } = await execute(command, ['inspect', file, '--json'], cwd);
   try {
@@ -49,7 +49,7 @@ async function inspect(command, file, cwd) {
 }
 
 /**
- * Runs foxify with `--reporter ndjson` and calls `onEvent` for each event as it arrives.
+ * Runs tinyprobe with `--reporter ndjson` and calls `onEvent` for each event as it arrives.
  * `cancel()` stops the process.
  * @returns {{ done: Promise<{ code: number, stderr: string }>, cancel: () => void }}
  */
@@ -81,4 +81,4 @@ function stream(command, args, cwd, onEvent, onStderr) {
   };
 }
 
-module.exports = { FoxifyNotFoundError, execute, inspect, stream };
+module.exports = { TinyprobeNotFoundError, execute, inspect, stream };
