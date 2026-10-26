@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - **tinyprobe: Migrate with AI**: pick a Postman collection, an Insomnia or Bruno export, an OpenAPI document or a HAR recording of the workspace, and get the prompt for your coding agent. It opens in VS Code's chat when there is one, and is copied to the clipboard in any case. For a Postman collection, the prompt also names the Postman environments of the workspace.
 

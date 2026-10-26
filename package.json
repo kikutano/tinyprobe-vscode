@@ -2,7 +2,7 @@
   "name": "tinyprobe-vscode",
   "displayName": "tinyprobe",
   "description": "Explore endpoints and run tinyprobe API workflows from VS Code: validation as you save, one-click calls, results in the Test Explorer.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "kikutano",
   "license": "MIT",
   "icon": "media/icon.png",
