@@ -70,6 +70,30 @@ class Tinyprobe {
     if (choice === 'Open settings') vscode.commands.executeCommand('workbench.action.openSettings', 'tinyprobe.path');
   }
 
+  /**
+   * The JSON Schema of the format (`tinyprobe schema`), once per binary; null when the binary has no
+   * `schema` command or cannot run, and completion of keys is then off.
+   */
+  schema() {
+    const command = this.command();
+    if (this.schemaCache?.command !== command) this.schemaCache = { command, value: this.loadSchema(command) };
+    return this.schemaCache.value;
+  }
+
+  async loadSchema(command) {
+    try {
+      const version = (await cli.execute(command, ['--version'])).stdout.trim();
+      if (!protocol.supportsSchema(version)) {
+        this.log(`tinyprobe ${version} has no 'tinyprobe schema': completion and hover of keys need ${protocol.SCHEMA_VERSION} or newer.`);
+        return null;
+      }
+      return JSON.parse((await cli.execute(command, ['schema'])).stdout);
+    } catch (error) {
+      this.log(`tinyprobe schema failed: ${error.message ?? error}`);
+      return null;
+    }
+  }
+
   /** Warns, once, when the binary is too old or speaks a newer protocol than this extension. */
   async checkVersion() {
     let result;

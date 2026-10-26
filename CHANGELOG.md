@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Completion and hover in tinyprobe files.** Keys at the cursor with their description (from `tinyprobe schema`), minus those already written; endpoint names after `call:`, also in a workflow that is not valid yet; the arguments of the called endpoint in `with:`, required params first; hover on a key and on the endpoint of a `call`. Needs tinyprobe 0.14.0 or newer; with an older binary everything else works as before.
+
 ## 0.4.0
 
 - **tinyprobe: Generate Tests with AI**: opens the chat in agent mode with the prompt that asks the agent to write and run tinyprobe tests from the backend's code, and copies it to the clipboard. "Migrate with AI" offers the same as its first choice, "The backend's code".

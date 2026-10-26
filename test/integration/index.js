@@ -177,6 +177,57 @@ async function run() {
     assert.equal(servers[0].cwd.fsPath, root);
   });
 
+  const labelOf = item => typeof item.label === 'string' ? item.label : item.label.label;
+  const completions = async (uri, line, character, kind) => {
+    const list = await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', uri, new vscode.Position(line, character));
+    return list.items.filter(i => i.kind === kind);
+  };
+  const typing = file('workflows/typing.yaml');
+  fs.writeFileSync(typing.fsPath, [
+    'import: [../api/testserver.yaml]',
+    'steps:',
+    '  - call: get_usr',
+    '    ',
+    '  - call: get_user',
+    '    with:',
+    '      ',
+    '    expect:',
+    '      status: 200',
+    ''
+  ].join('\n'));
+  await vscode.window.showTextDocument(typing);
+  // The workflow is invalid (get_usr), but its import loads: the inspection still has the endpoints.
+  await waitFor(() => tinyprobe.inspector.get(typing.fsPath)?.endpoints?.length > 0, 'the endpoints of the invalid workflow');
+
+  await check('completion offers the keys of a step, with their description, minus those already written', async () => {
+    const keys = await completions(typing, 3, 4, vscode.CompletionItemKind.Property);
+    const labels = keys.map(labelOf);
+    assert.ok(labels.includes('expect') && labels.includes('until') && labels.includes('save'), labels.join(', '));
+    assert.ok(!labels.includes('call'), 'call is already written');
+    assert.match(keys.find(k => labelOf(k) === 'until').documentation.value, /Polling/);
+  });
+
+  await check('completion after call: offers the endpoints of the imports, even in an invalid workflow', async () => {
+    const endpoints = await completions(typing, 2, 17, vscode.CompletionItemKind.Function);
+    const user = endpoints.find(e => labelOf(e) === 'get_user');
+    assert.ok(user, endpoints.map(labelOf).join(', '));
+    assert.equal(user.detail, 'GET /api/users/${id}');
+  });
+
+  await check('completion in with: offers the arguments of the called endpoint, required first', async () => {
+    const args = await completions(typing, 6, 6, vscode.CompletionItemKind.Variable);
+    const sorted = args.sort((a, b) => a.sortText.localeCompare(b.sortText));
+    assert.deepEqual(sorted.map(labelOf), ['id', 'baseUrl', 'token']);
+    assert.equal(sorted[0].detail, 'in the path');
+  });
+
+  await check('hover shows the description of a key and the endpoint of a call', async () => {
+    const onKey = await vscode.commands.executeCommand('vscode.executeHoverProvider', typing, new vscode.Position(7, 6));
+    assert.match(onKey.map(h => h.contents.map(c => c.value ?? c).join('')).join(''), /\*\*expect\*\*: What the response must be/);
+    const onCall = await vscode.commands.executeCommand('vscode.executeHoverProvider', typing, new vscode.Position(4, 14));
+    assert.match(onCall.map(h => h.contents.map(c => c.value ?? c).join('')).join(''), /GET \/api\/users\/\$\{id\}/);
+  });
+
   const report = results.join('\n');
   fs.writeFileSync(path.join(root, 'integration-results.txt'), report);
   if (results.some(r => r.startsWith('FAIL'))) throw new Error(`Integration tests failed:\n${report}`);
