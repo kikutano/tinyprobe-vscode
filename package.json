@@ -40,6 +40,12 @@
     "workspaceContains:**/*.yml"
   ],
   "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "tinyprobe.mcp",
+        "label": "tinyprobe"
+      }
+    ],
     "commands": [
       {
         "command": "tinyprobe.runWorkflow",

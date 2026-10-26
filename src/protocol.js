@@ -11,6 +11,9 @@ const SUPPORTED_PROTOCOL = 1;
 /** The first version of the binary named `tinyprobe`, with `inspect`, `call` and `--reporter ndjson`. */
 const MINIMUM_VERSION = '0.10.0';
 
+/** The first version with `tinyprobe mcp`. Older binaries still work for everything else. */
+const MCP_VERSION = '0.13.0';
+
 /**
  * Splits text that arrives in chunks into lines: NDJSON events can be cut anywhere
  * by the pipe. Empty lines are skipped.
@@ -151,6 +154,11 @@ function isSupportedVersion(version) {
   return /^0\.0\.0-/.test(version) || compareVersions(version, MINIMUM_VERSION) >= 0;
 }
 
+/** Whether the binary has the MCP server (`tinyprobe mcp`). */
+function supportsMcp(version) {
+  return /^0\.0\.0-/.test(version) || compareVersions(version, MCP_VERSION) >= 0;
+}
+
 /**
  * The arguments a call can take, split for prompting: required params first, then
  * everything else (optional params with their default, query names, other placeholders).
@@ -172,6 +180,7 @@ function endpointInputs(endpoint) {
 module.exports = {
   SUPPORTED_PROTOCOL,
   MINIMUM_VERSION,
+  MCP_VERSION,
   LineSplitter,
   isTinyprobeFile,
   isWorkflowFile,
@@ -186,5 +195,6 @@ module.exports = {
   undefinedVariable,
   compareVersions,
   isSupportedVersion,
+  supportsMcp,
   endpointInputs
 };
