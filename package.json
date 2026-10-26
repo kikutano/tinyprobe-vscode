@@ -53,6 +53,11 @@
         "category": "tinyprobe"
       },
       {
+        "command": "tinyprobe.migrateWithAi",
+        "title": "Migrate with AI",
+        "category": "tinyprobe"
+      },
+      {
         "command": "tinyprobe.selectEnvironment",
         "title": "Select Environment",
         "category": "tinyprobe"
@@ -81,6 +86,13 @@
         {
           "command": "tinyprobe.validate",
           "when": "editorLangId == yaml"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tinyprobe.migrateWithAi",
+          "when": "resourceFilename =~ /(postman_collection|postman_environment|openapi|swagger|insomnia|^bruno\\.json$|\\.har$)/i",
+          "group": "tinyprobe"
         }
       ],
       "editor/title/run": [

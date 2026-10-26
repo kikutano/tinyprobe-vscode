@@ -140,6 +140,25 @@ async function run() {
     }
   });
 
+  await check('Migrate with AI on a Postman collection puts the prompt on the clipboard, with its environment', async () => {
+    const collection = file('postman/tinyprobe-test-server.postman_collection.json');
+    await vscode.env.clipboard.writeText('');
+
+    const result = await vscode.commands.executeCommand('tinyprobe.migrateWithAi', collection);
+
+    const prompt = await vscode.env.clipboard.readText();
+    assert.equal(result.prompt, prompt);
+    assert.match(prompt, /the Postman collection postman\/tinyprobe-test-server\.postman_collection\.json and the environments postman\/local\.postman_environment\.json/);
+  });
+
+  await check('the workspace scan finds the exports and skips other JSON and YAML files', async () => {
+    const found = await tinyprobe.migrator.findExports();
+    const kinds = Object.fromEntries(found.map(e => [vscode.workspace.asRelativePath(e.uri, false), e.kind]));
+    assert.equal(kinds['postman/tinyprobe-test-server.postman_collection.json'], 'postman');
+    assert.equal(kinds['postman/local.postman_environment.json'], 'postman-environment');
+    assert.equal(kinds['api/testserver.yaml'], undefined);
+  });
+
   const report = results.join('\n');
   fs.writeFileSync(path.join(root, 'integration-results.txt'), report);
   if (results.some(r => r.startsWith('FAIL'))) throw new Error(`Integration tests failed:\n${report}`);

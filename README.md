@@ -10,6 +10,7 @@ Explore endpoints and run [tinyprobe](https://github.com/kikutano/tinyprobe) API
 - **Call an endpoint.** A **▶ Call** link sits above every endpoint of an API file. It asks for the required params, lets you pick optional ones, and shows the response, whatever its status. The last values are remembered for each endpoint.
 - **Run workflows.** **▶ Run workflow** at the top of a workflow, or the **Test Explorer**: each workflow is a test suite and each step a test, updated live as the run goes. A failed step shows why, at its line.
 - **See every exchange.** The run view lists the steps; select one to see its checks, saved values, request and response.
+- **Migrate with AI.** **tinyprobe: Migrate with AI** finds the Postman collections and environments, Insomnia and Bruno exports, OpenAPI documents and HAR recordings of the workspace, and writes the prompt that asks your coding agent to convert the one you pick, following `tinyprobe guide`. The prompt goes into VS Code's chat, ready to review and send, and on the clipboard for any other agent. It is also in the explorer's context menu of those files.
 - **Environments.** The environment file (`env.local.yaml`, `env.dev.yaml`...) is passed to every run and call. Pick it in the status bar, bottom left; the choice is kept for each folder. If you have not picked one yet and the folder has environment files, the first run or call asks which one to use. When a step fails on an undefined variable, a message tells you, with a button to change the environment.
 
 The extension has no runtime dependency and no engine of its own: it runs the `tinyprobe` binary, and reads its [JSON protocol](https://github.com/kikutano/tinyprobe/blob/main/docs/protocol.md). What you see in VS Code is what `tinyprobe run` does in CI.
@@ -50,6 +51,7 @@ irm https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.ps1 | iex
 
 - **tinyprobe: Run Workflow**: runs the current workflow.
 - **tinyprobe: Call Endpoint**: calls an endpoint of the current file, picked from a list.
+- **tinyprobe: Migrate with AI**: the prompt that hands a Postman, Insomnia, Bruno, OpenAPI or HAR export to your coding agent.
 - **tinyprobe: Select Environment**: the environment file passed with `-e`.
 - **tinyprobe: Show Last Run**: reopens the run view.
 - **tinyprobe: Validate File**: validates the current file now.
