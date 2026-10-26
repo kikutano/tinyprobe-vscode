@@ -159,6 +159,17 @@ async function run() {
     assert.equal(kinds['api/testserver.yaml'], undefined);
   });
 
+  await check('the tinyprobe MCP server is offered to VS Code, in the workspace folder', async () => {
+    assert.equal(typeof vscode.lm.registerMcpServerDefinitionProvider, 'function', 'this VS Code has the MCP API');
+    const servers = await tinyprobe.mcp.provideMcpServerDefinitions();
+    assert.equal(servers.length, 1);
+    assert.ok(servers[0] instanceof vscode.McpStdioServerDefinition);
+    assert.equal(servers[0].label, 'tinyprobe');
+    assert.equal(servers[0].command, tinyprobe.tinyprobe.command());
+    assert.deepEqual(servers[0].args, ['mcp']);
+    assert.equal(servers[0].cwd.fsPath, root);
+  });
+
   const report = results.join('\n');
   fs.writeFileSync(path.join(root, 'integration-results.txt'), report);
   if (results.some(r => r.startsWith('FAIL'))) throw new Error(`Integration tests failed:\n${report}`);

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Tools for the chat:** the extension registers the tinyprobe MCP server (`tinyprobe mcp`) with VS Code, so Copilot and the other chat agents of the editor get the tools `guide`, `inspect`, `call` and `run` without configuration. The server runs in the first workspace folder. It needs tinyprobe 0.13.0 or newer and VS Code 1.101 or newer; with older versions everything else works as before.
+
 ## 0.3.0
 
 - **tinyprobe: Migrate with AI**: pick a Postman collection, an Insomnia or Bruno export, an OpenAPI document or a HAR recording of the workspace, and get the prompt for your coding agent. It opens in VS Code's chat when there is one, and is copied to the clipboard in any case. For a Postman collection, the prompt also names the Postman environments of the workspace.

@@ -9,6 +9,7 @@ const { WorkflowTests } = require('./testing');
 const { EndpointCaller } = require('./call');
 const { TinyprobeCodeLens } = require('./codelens');
 const { Migrator } = require('./migrate');
+const { McpServerProvider } = require('./mcp');
 
 const YAML = [{ language: 'yaml', scheme: 'file' }];
 
@@ -21,7 +22,8 @@ function activate(context) {
   const caller = new EndpointCaller(tinyprobe, inspector, runView);
   const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri));
   const migrator = new Migrator();
-  context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses);
+  const mcp = new McpServerProvider(tinyprobe);
+  context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses, mcp);
 
   const isTinyprobe = document => document.uri.scheme === 'file' && document.languageId === 'yaml' && protocol.isTinyprobeFile(document.getText());
   const validateOnSave = () => vscode.workspace.getConfiguration('tinyprobe').get('validateOnSave');
@@ -85,7 +87,7 @@ function activate(context) {
   updateContext(vscode.window.activeTextEditor);
 
   // The extension's API, used by the integration tests.
-  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator };
+  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator, mcp };
 }
 
 /** tinyprobe reads files from disk: unsaved changes are saved first, as a run would expect. */

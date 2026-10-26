@@ -11,6 +11,7 @@ Explore endpoints and run [tinyprobe](https://github.com/kikutano/tinyprobe) API
 - **Run workflows.** **▶ Run workflow** at the top of a workflow, or the **Test Explorer**: each workflow is a test suite and each step a test, updated live as the run goes. A failed step shows why, at its line.
 - **See every exchange.** The run view lists the steps; select one to see its checks, saved values, request and response.
 - **Migrate with AI.** **tinyprobe: Migrate with AI** finds the Postman collections and environments, Insomnia and Bruno exports, OpenAPI documents and HAR recordings of the workspace, and writes the prompt that asks your coding agent to convert the one you pick, following `tinyprobe guide`. The prompt goes into VS Code's chat, ready to review and send, and on the clipboard for any other agent. It is also in the explorer's context menu of those files.
+- **Tools for the chat.** The extension gives VS Code's chat agents (Copilot and others) the tinyprobe tools, from `tinyprobe mcp`: `guide`, `inspect`, `call` and `run`, with nothing to configure. They appear in the chat's tool list as **tinyprobe**; VS Code asks you before an agent sends requests with `call` or `run`. Needs tinyprobe 0.13.0 or newer.
 - **Environments.** The environment file (`env.local.yaml`, `env.dev.yaml`...) is passed to every run and call. Pick it in the status bar, bottom left; the choice is kept for each folder. If you have not picked one yet and the folder has environment files, the first run or call asks which one to use. When a step fails on an undefined variable, a message tells you, with a button to change the environment.
 
 The extension has no runtime dependency and no engine of its own: it runs the `tinyprobe` binary, and reads its [JSON protocol](https://github.com/kikutano/tinyprobe/blob/main/docs/protocol.md). What you see in VS Code is what `tinyprobe run` does in CI.
@@ -29,7 +30,7 @@ To try it right away, open the [example](https://github.com/kikutano/tinyprobe/t
 
 ## Requirements
 
-[tinyprobe](https://github.com/kikutano/tinyprobe#install) 0.10.0 or newer, on the `PATH` or set with `tinyprobe.path`:
+[tinyprobe](https://github.com/kikutano/tinyprobe#install) 0.10.0 or newer, on the `PATH` or set with `tinyprobe.path`; the tools for the chat need 0.13.0 and VS Code 1.101 or newer:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.sh | sh

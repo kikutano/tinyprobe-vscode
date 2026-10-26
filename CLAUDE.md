@@ -24,6 +24,7 @@ Plain JavaScript (CommonJS), no dependency, no build step.
 - `src/tinyprobe.js`: shared state: binary path, output channel, environment picker (status bar), `--var` settings.
 - `src/inspector.js`: `tinyprobe inspect --json` → diagnostics and cached file model.
 - `src/migration.js` (no VS Code API: recognises exports, writes the agent prompt) and `src/migrate.js` (the "Migrate with AI" command: workspace scan, chat, clipboard).
+- `src/mcp.js`: registers `tinyprobe mcp` with VS Code (`vscode.lm.registerMcpServerDefinitionProvider`), only when the binary has it (`protocol.supportsMcp`).
 - `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view.js` (webview; renders ndjson events in any browser, meant to be reused by other front ends).
 - `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the tinyprobe repo.
 
