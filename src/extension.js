@@ -8,6 +8,7 @@ const { RunView } = require('./runView');
 const { WorkflowTests } = require('./testing');
 const { EndpointCaller } = require('./call');
 const { TinyprobeCodeLens } = require('./codelens');
+const { Migrator } = require('./migrate');
 
 const YAML = [{ language: 'yaml', scheme: 'file' }];
 
@@ -19,6 +20,7 @@ function activate(context) {
   const tests = new WorkflowTests(tinyprobe, inspector, runView);
   const caller = new EndpointCaller(tinyprobe, inspector, runView);
   const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri));
+  const migrator = new Migrator();
   context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses);
 
   const isTinyprobe = document => document.uri.scheme === 'file' && document.languageId === 'yaml' && protocol.isTinyprobeFile(document.getText());
@@ -62,6 +64,7 @@ function activate(context) {
       await saveIfDirty(file);
       await caller.call(file, typeof endpoint === 'string' ? endpoint : undefined);
     }),
+    vscode.commands.registerCommand('tinyprobe.migrateWithAi', uri => migrator.migrate(uri instanceof vscode.Uri ? uri : undefined)),
     vscode.commands.registerCommand('tinyprobe.selectEnvironment', () => tinyprobe.selectEnvironment()),
     vscode.commands.registerCommand('tinyprobe.showRun', () => {
       if (runView.hasRun) runView.show();
@@ -82,7 +85,7 @@ function activate(context) {
   updateContext(vscode.window.activeTextEditor);
 
   // The extension's API, used by the integration tests.
-  return { tinyprobe, inspector, runView, tests, caller, lenses };
+  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator };
 }
 
 /** tinyprobe reads files from disk: unsaved changes are saved first, as a run would expect. */

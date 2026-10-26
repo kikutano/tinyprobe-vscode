@@ -23,6 +23,7 @@ Plain JavaScript (CommonJS), no dependency, no build step.
 - `src/protocol.js` and `src/cli.js`: **no VS Code API**, unit-tested with Node. Protocol parsing, argument building, version checks (`MINIMUM_VERSION`, `SUPPORTED_PROTOCOL`), spawning the binary and splitting NDJSON. Put new logic here when it can live without `vscode`.
 - `src/tinyprobe.js`: shared state: binary path, output channel, environment picker (status bar), `--var` settings.
 - `src/inspector.js`: `tinyprobe inspect --json` → diagnostics and cached file model.
+- `src/migration.js` (no VS Code API: recognises exports, writes the agent prompt) and `src/migrate.js` (the "Migrate with AI" command: workspace scan, chat, clipboard).
 - `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view.js` (webview; renders ndjson events in any browser, meant to be reused by other front ends).
 - `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the tinyprobe repo.
 
