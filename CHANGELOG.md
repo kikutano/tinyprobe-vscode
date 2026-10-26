@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - **Completion and hover in tinyprobe files.** Keys at the cursor with their description (from `tinyprobe schema`), minus those already written; endpoint names after `call:`, also in a workflow that is not valid yet; the arguments of the called endpoint in `with:`, required params first; hover on a key and on the endpoint of a `call`. Needs tinyprobe 0.14.0 or newer; with an older binary everything else works as before.
 
