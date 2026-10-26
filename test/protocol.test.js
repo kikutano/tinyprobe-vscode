@@ -134,3 +134,105 @@ test('the MCP server needs tinyprobe 0.13.0, or a development build', () => {
   assert.equal(protocol.supportsMcp('0.9.9'), false);
   assert.equal(protocol.supportsMcp('0.0.0-dev'), true);
 });
+
+test('schema needs tinyprobe 0.14.0, or a development build', () => {
+  assert.equal(protocol.supportsSchema('0.14.0'), true);
+  assert.equal(protocol.supportsSchema('0.13.0'), false);
+  assert.equal(protocol.supportsSchema('0.0.0-dev'), true);
+});
+
+const workflow = [
+  'name: Users',              // 0
+  'import: [../api/x.yaml]',  // 1
+  '',                         // 2
+  'steps:',                   // 3
+  '  - name: Login',          // 4
+  '    call: login',          // 5
+  '    with:',                // 6
+  '      username: admin',    // 7
+  '      ',                   // 8
+  '    expect:',              // 9
+  '      status: 200',        // 10
+  '      body:',              // 11
+  '        $.id: { gte: 1 }', // 12
+  '    # a comment',          // 13
+  '    ',                     // 14
+  '  - sleep: 1s',            // 15
+  '  - '                      // 16
+];
+
+test('the YAML path is found by indentation, list items included', () => {
+  assert.deepEqual(protocol.yamlPath(workflow, 10, 6), ['steps', { item: 4, col: 4 }, 'expect']);
+  assert.deepEqual(protocol.yamlPath(workflow, 14, 4), ['steps', { item: 4, col: 4 }]);
+  assert.deepEqual(protocol.yamlPath(workflow, 2, 0), []);
+  assert.deepEqual(protocol.yamlPath(['steps:', '  - expect:', '      status: 200'], 2, 6), ['steps', { item: 1, col: 4 }, 'expect']);
+});
+
+test('completion knows where the cursor is', () => {
+  const key = protocol.completionContext(workflow, 14, 4);
+  assert.equal(key.kind, 'key');
+  assert.deepEqual(key.path, ['steps', { item: 4, col: 4 }]);
+  assert.deepEqual([...key.existing].sort(), ['call', 'expect', 'name', 'with']);
+
+  const newItem = protocol.completionContext(workflow, 16, 4);
+  assert.deepEqual(newItem.path, ['steps', { item: 16, col: 4 }]);
+  assert.equal(newItem.existing.size, 0);
+
+  const args = protocol.completionContext(workflow, 8, 6);
+  assert.equal(args.kind, 'with');
+  assert.equal(args.call, 'login');
+  assert.deepEqual([...args.existing], ['username']);
+
+  assert.deepEqual(protocol.completionContext(['steps:', '  - call: get_u'], 1, 15), { kind: 'call', partial: 'get_u' });
+  assert.equal(protocol.completionContext(workflow, 10, 15), undefined, 'inside a value');
+});
+
+test('hover finds the key or the called endpoint under the cursor', () => {
+  assert.deepEqual(protocol.hoverContext(workflow, 9, 6), { kind: 'key', path: ['steps', { item: 4, col: 4 }], key: 'expect' });
+  assert.deepEqual(protocol.hoverContext(workflow, 4, 5), { kind: 'key', path: ['steps', { item: 4, col: 4 }], key: 'name' });
+  assert.deepEqual(protocol.hoverContext(workflow, 5, 12), { kind: 'call', name: 'login' });
+  assert.equal(protocol.hoverContext(workflow, 13, 6), undefined, 'a comment');
+});
+
+test('schema keys follow properties, items, maps and anyOf', () => {
+  const schema = {
+    properties: {
+      steps: { type: 'array', items: { $ref: '#/$defs/step' } },
+      endpoints: { type: 'object', additionalProperties: { $ref: '#/$defs/endpoint' } }
+    },
+    $defs: {
+      step: { properties: { call: { description: 'The endpoint.' }, expect: { $ref: '#/$defs/expect' } } },
+      expect: { properties: { body: { type: 'object', additionalProperties: { $ref: '#/$defs/check' } } } },
+      check: { anyOf: [{ $ref: '#/$defs/condition' }, { type: 'string' }] },
+      condition: { properties: { gt: { description: 'Greater.' }, lt: {} } },
+      endpoint: { properties: { path: {} } }
+    }
+  };
+
+  assert.deepEqual(protocol.schemaKeys(schema, []).map(k => k.name), ['steps', 'endpoints']);
+  assert.deepEqual(protocol.schemaKeys(schema, ['steps', { item: 1, col: 4 }]), [
+    { name: 'call', description: 'The endpoint.' },
+    { name: 'expect', description: '' }
+  ]);
+  assert.deepEqual(protocol.schemaKeys(schema, ['steps', { item: 1, col: 4 }, 'expect', 'body', '$.id']).map(k => k.name), ['gt', 'lt']);
+  assert.deepEqual(protocol.schemaKeys(schema, ['endpoints', 'get_user']).map(k => k.name), ['path']);
+  assert.deepEqual(protocol.schemaKeys(schema, ['nope', 'deeper']), []);
+});
+
+test('with suggestions put what a step usually passes first', () => {
+  const endpoint = {
+    path: '/users/${id}/posts',
+    query: ['page'],
+    params: [{ name: 'limit', required: false, default: 10 }, { name: 'tenant', required: true, default: null }],
+    arguments: ['baseUrl', 'id', 'limit', 'page', 'tenant', 'token']
+  };
+
+  assert.deepEqual(protocol.withSuggestions(endpoint), [
+    { name: 'tenant', detail: 'required param' },
+    { name: 'limit', detail: 'param, default 10' },
+    { name: 'page', detail: 'query parameter' },
+    { name: 'id', detail: 'in the path' },
+    { name: 'baseUrl', detail: 'variable, usually from the environment or a saved value' },
+    { name: 'token', detail: 'variable, usually from the environment or a saved value' }
+  ]);
+});

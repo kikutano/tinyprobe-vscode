@@ -10,6 +10,7 @@ const { EndpointCaller } = require('./call');
 const { TinyprobeCodeLens } = require('./codelens');
 const { Migrator } = require('./migrate');
 const { McpServerProvider } = require('./mcp');
+const { TinyprobeEditing } = require('./editing');
 
 const YAML = [{ language: 'yaml', scheme: 'file' }];
 
@@ -23,6 +24,7 @@ function activate(context) {
   const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri));
   const migrator = new Migrator();
   const mcp = new McpServerProvider(tinyprobe);
+  const editing = new TinyprobeEditing(tinyprobe, inspector);
   context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses, mcp);
 
   const isTinyprobe = document => document.uri.scheme === 'file' && document.languageId === 'yaml' && protocol.isTinyprobeFile(document.getText());
@@ -42,6 +44,8 @@ function activate(context) {
 
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(YAML, lenses),
+    vscode.languages.registerCompletionItemProvider(YAML, editing, ' ', ':'),
+    vscode.languages.registerHoverProvider(YAML, editing),
 
     vscode.workspace.onDidOpenTextDocument(validate),
     vscode.workspace.onDidSaveTextDocument(async document => {
@@ -88,7 +92,7 @@ function activate(context) {
   updateContext(vscode.window.activeTextEditor);
 
   // The extension's API, used by the integration tests.
-  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator, mcp };
+  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator, mcp, editing };
 }
 
 /** tinyprobe reads files from disk: unsaved changes are saved first, as a run would expect. */
