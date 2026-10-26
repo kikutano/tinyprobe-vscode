@@ -151,6 +151,13 @@ async function run() {
     assert.match(prompt, /the Postman collection postman\/tinyprobe-test-server\.postman_collection\.json and the environments postman\/local\.postman_environment\.json/);
   });
 
+  await check('Generate Tests with AI puts the backend prompt on the clipboard', async () => {
+    await vscode.env.clipboard.writeText('');
+    const result = await vscode.commands.executeCommand('tinyprobe.generateWithAi');
+    assert.equal(await vscode.env.clipboard.readText(), result.prompt);
+    assert.match(result.prompt, /look at this backend's routes/);
+  });
+
   await check('the workspace scan finds the exports and skips other JSON and YAML files', async () => {
     const found = await tinyprobe.migrator.findExports();
     const kinds = Object.fromEntries(found.map(e => [vscode.workspace.asRelativePath(e.uri, false), e.kind]));

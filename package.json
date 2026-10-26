@@ -59,6 +59,11 @@
         "category": "tinyprobe"
       },
       {
+        "command": "tinyprobe.generateWithAi",
+        "title": "Generate Tests with AI",
+        "category": "tinyprobe"
+      },
+      {
         "command": "tinyprobe.migrateWithAi",
         "title": "Migrate with AI",
         "category": "tinyprobe"

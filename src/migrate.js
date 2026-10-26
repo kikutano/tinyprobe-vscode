@@ -22,6 +22,7 @@ class Migrator {
       return;
     }
     if (!picked) return;
+    if (picked.kind === 'backend') return this.generate();
 
     const environments = picked.kind === 'postman'
       ? found.filter(e => e.kind === 'postman-environment').map(e => relative(e.uri))
@@ -33,6 +34,11 @@ class Migrator {
     });
 
     return this.handOver(prompt);
+  }
+
+  /** "tinyprobe: Generate Tests with AI": the agent reads the backend's code and writes the tests. */
+  async generate() {
+    return this.handOver(migration.backendPrompt());
   }
 
   /** The exports in the workspace, recognised by their content. */
@@ -57,19 +63,20 @@ class Migrator {
   async pick(found) {
     const sources = found.filter(e => e.kind !== 'postman-environment');
     const browse = { label: '$(folder-opened) Browse...', description: 'Pick an export file' };
+    const code = { label: '$(code) The backend\'s code', description: 'No export: the agent reads the routes of this workspace', backend: true };
     const items = [
+      code,
       ...sources.map(e => ({ label: relative(e.uri), description: migration.sourceLabel(e.kind), source: e })),
       browse
     ];
 
-    const choice = sources.length === 0
-      ? browse
-      : await vscode.window.showQuickPick(items, {
-        title: 'tinyprobe: migrate with AI',
-        placeHolder: 'The collection or document your coding agent converts to tinyprobe files',
-        matchOnDescription: true
-      });
+    const choice = await vscode.window.showQuickPick(items, {
+      title: 'tinyprobe: migrate with AI',
+      placeHolder: 'What your coding agent turns into tinyprobe files',
+      matchOnDescription: true
+    });
     if (!choice) return undefined;
+    if (choice.backend) return { kind: 'backend' };
     if (choice.source) return choice.source;
 
     const files = await vscode.window.showOpenDialog({
@@ -96,7 +103,8 @@ class Migrator {
     const commands = await vscode.commands.getCommands(true);
     if (commands.includes('workbench.action.chat.open')) {
       try {
-        await vscode.commands.executeCommand('workbench.action.chat.open', { query: prompt, isPartialQuery: true });
+        // Agent mode: the agent edits files and calls the tinyprobe tools; older VS Code ignores the mode.
+        await vscode.commands.executeCommand('workbench.action.chat.open', { query: prompt, isPartialQuery: true, mode: 'agent' });
         inChat = true;
       } catch {
         inChat = false;

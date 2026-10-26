@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **tinyprobe: Generate Tests with AI**: opens the chat in agent mode with the prompt that asks the agent to write and run tinyprobe tests from the backend's code, and copies it to the clipboard. "Migrate with AI" offers the same as its first choice, "The backend's code".
+- The prompts of both commands ask the agent to use the tinyprobe tools when it has them.
 - **Tools for the chat:** the extension registers the tinyprobe MCP server (`tinyprobe mcp`) with VS Code, so Copilot and the other chat agents of the editor get the tools `guide`, `inspect`, `call` and `run` without configuration. The server runs in the first workspace folder. It needs tinyprobe 0.13.0 or newer and VS Code 1.101 or newer; with older versions everything else works as before.
 
 ## 0.3.0
