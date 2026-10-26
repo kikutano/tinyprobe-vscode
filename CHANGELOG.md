@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - **tinyprobe: Generate Tests with AI**: opens the chat in agent mode with the prompt that asks the agent to write and run tinyprobe tests from the backend's code, and copies it to the clipboard. "Migrate with AI" offers the same as its first choice, "The backend's code".
 - The prompts of both commands ask the agent to use the tinyprobe tools when it has them.
