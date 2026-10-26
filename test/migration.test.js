@@ -64,3 +64,18 @@ test('other tools get the section on other tools, with their name', () => {
   assert.match(prompt, /section on migrating from other tools: convert the Bruno collection api-tests/);
   assert.doesNotMatch(prompt, /environments/);
 });
+
+test('the backend prompt sends the agent to the guide and to the tinyprobe tools', () => {
+  const prompt = migration.backendPrompt();
+
+  assert.match(prompt, /`tinyprobe guide`/);
+  assert.match(prompt, /routes,\nauthentication and seed data/);
+  assert.match(prompt, /tinyprobe\/env\.local\.yaml/);
+  assert.match(prompt, /If you have the tinyprobe tools \(guide, inspect, call, run\), use them/);
+});
+
+test('every migration prompt mentions the tinyprobe tools', () => {
+  for (const kind of ['postman', 'openapi', 'bruno']) {
+    assert.match(migration.migrationPrompt({ kind, source: 'x' }), /tinyprobe tools/, kind);
+  }
+});

@@ -61,6 +61,22 @@ function sourcePath(kind, file) {
   return kind === 'bruno' ? path.dirname(file) : file;
 }
 
+/** Agents that have the tinyprobe MCP tools (the extension registers them in VS Code) should use them. */
+const TOOLS = 'If you have the tinyprobe tools (guide, inspect, call, run), use them instead of the shell.';
+
+/**
+ * The prompt that asks the agent to write tests from the backend's own code (README of tinyprobe,
+ * "From the backend code").
+ */
+function backendPrompt() {
+  return [
+    `Read the guide with \`tinyprobe guide\` (or ${GUIDE_URL}) and follow it: look at this backend's routes,`,
+    'authentication and seed data, write the tinyprobe API file and workflows in tinyprobe/, then run them until',
+    'they pass. Put credentials only in tinyprobe/env.local.yaml and add it to .gitignore. Tell me which failures',
+    `look like backend bugs. ${TOOLS}`
+  ].join('\n');
+}
+
 /**
  * The prompt for the agent, built like the README prompts of tinyprobe.
  * @param {{ kind: SourceKind, source: string, environments?: string[] }} migration
@@ -77,7 +93,8 @@ function migrationPrompt({ kind, source, environments = [] }) {
       'and workflows that check the documented status codes and response fields, then run them against the',
       'local backend until they pass. Take test values from the seed data, not from the examples in the document.',
       `${secrets} ${report}`,
-      'Tell me where the backend does not do what the document says.'
+      'Tell me where the backend does not do what the document says.',
+      TOOLS
     ].join('\n');
   }
 
@@ -88,14 +105,16 @@ function migrationPrompt({ kind, source, environments = [] }) {
     return [
       `${read} and follow its section on migrating from Postman: convert ${what}`,
       'to tinyprobe files in tinyprobe/, one folder at a time, and run each workflow until it passes.',
-      `${secrets} ${report}`
+      `${secrets} ${report}`,
+      TOOLS
     ].join('\n');
   }
 
   return [
     `${read} and follow its section on migrating from other tools: convert the ${sourceLabel(kind)} ${source}`,
     'to tinyprobe files in tinyprobe/, one folder at a time, and run each workflow until it passes.',
-    `${secrets} ${report}`
+    `${secrets} ${report}`,
+    TOOLS
   ].join('\n');
 }
 
@@ -103,4 +122,4 @@ function list(items) {
   return items.length === 1 ? items[0] : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-module.exports = { SNIFF_BYTES, detectSource, sourceLabel, sourcePath, migrationPrompt };
+module.exports = { SNIFF_BYTES, detectSource, sourceLabel, sourcePath, migrationPrompt, backendPrompt };

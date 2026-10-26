@@ -66,6 +66,7 @@ function activate(context) {
       await saveIfDirty(file);
       await caller.call(file, typeof endpoint === 'string' ? endpoint : undefined);
     }),
+    vscode.commands.registerCommand('tinyprobe.generateWithAi', () => migrator.generate()),
     vscode.commands.registerCommand('tinyprobe.migrateWithAi', uri => migrator.migrate(uri instanceof vscode.Uri ? uri : undefined)),
     vscode.commands.registerCommand('tinyprobe.selectEnvironment', () => tinyprobe.selectEnvironment()),
     vscode.commands.registerCommand('tinyprobe.showRun', () => {
