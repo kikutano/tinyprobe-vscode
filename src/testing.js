@@ -109,8 +109,11 @@ class WorkflowTests {
     return [...workflows.values()].filter(w => !excluded.has(w.id));
   }
 
-  /** Runs one workflow from the editor (CodeLens, title bar), in the Test Explorer and in the run view. */
-  async runFile(uri) {
+  /**
+   * Runs one workflow from the editor (CodeLens, title bar), in the Test Explorer and in the run view;
+   * with `to`, only up to that step (`tinyprobe run --to`), whose response the run view then shows.
+   */
+  async runFile(uri, { to } = {}) {
     await this.update(uri);
     const item = this.controller.items.get(uri.toString());
     if (!item) {
@@ -120,13 +123,13 @@ class WorkflowTests {
     const request = new vscode.TestRunRequest([item]);
     const cancellation = new vscode.CancellationTokenSource();
     try {
-      await this.run(request, cancellation.token, { reveal: true });
+      await this.run(request, cancellation.token, { reveal: true, to });
     } finally {
       cancellation.dispose();
     }
   }
 
-  async run(request, token, { reveal = false } = {}) {
+  async run(request, token, { reveal = false, to } = {}) {
     if (!(await this.tinyprobe.ensureEnvironment())) return;
 
     const run = this.controller.createTestRun(request);
@@ -134,7 +137,7 @@ class WorkflowTests {
     try {
       for (const workflow of this.workflowsOf(request)) {
         if (token.isCancellationRequested) break;
-        events.push(...await this.runWorkflow(workflow, run, token, reveal));
+        events.push(...await this.runWorkflow(workflow, run, token, reveal, to));
       }
     } finally {
       run.end();
@@ -143,7 +146,7 @@ class WorkflowTests {
     this.tinyprobe.explainUndefinedVariables(events);
   }
 
-  async runWorkflow(item, run, token, reveal) {
+  async runWorkflow(item, run, token, reveal, to) {
     if (item.canResolveChildren || item.children.size === 0) await this.resolveSteps(item);
     const steps = new Map();
     item.children.forEach(child => {
@@ -152,7 +155,7 @@ class WorkflowTests {
     });
     run.started(item);
 
-    const options = this.tinyprobe.runOptions();
+    const options = { ...this.tinyprobe.runOptions(), to };
     const args = protocol.runArgs(item.uri.fsPath, options);
     const cwd = this.tinyprobe.cwdFor(item.uri);
     this.tinyprobe.log(`> tinyprobe ${args.join(' ')}`);

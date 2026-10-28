@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Run to here**: a lens on every step of a workflow runs it up to that step (`tinyprobe run --to`) and opens the run view on it, with its request and response. The steps of a sequence share the line of their `use`, whose lens runs the whole sequence. Needs tinyprobe 0.18.0 or newer; with an older binary the lens is not shown and everything else works as before.
+
 ## 0.5.0
 
 - **Completion and hover in tinyprobe files.** Keys at the cursor with their description (from `tinyprobe schema`), minus those already written; endpoint names after `call:`, also in a workflow that is not valid yet; the arguments of the called endpoint in `with:`, required params first; hover on a key and on the endpoint of a `call`. Needs tinyprobe 0.14.0 or newer; with an older binary everything else works as before.

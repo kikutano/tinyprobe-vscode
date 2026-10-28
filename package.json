@@ -48,6 +48,11 @@
     ],
     "commands": [
       {
+        "command": "tinyprobe.runToHere",
+        "title": "Run to Here",
+        "category": "tinyprobe"
+      },
+      {
         "command": "tinyprobe.runWorkflow",
         "title": "Run Workflow",
         "category": "tinyprobe",
@@ -97,6 +102,10 @@
         {
           "command": "tinyprobe.validate",
           "when": "editorLangId == yaml"
+        },
+        {
+          "command": "tinyprobe.runToHere",
+          "when": "false"
         }
       ],
       "explorer/context": [

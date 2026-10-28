@@ -59,11 +59,28 @@ async function run() {
     assert.equal(login.range.start.line, loginLine);
   });
 
-  await check('a workflow gets a Run CodeLens and no Call lens for imported endpoints', async () => {
+  await check('a workflow gets a Run CodeLens, a Run to here lens per step line, and no Call lens for imported endpoints', async () => {
     await vscode.window.showTextDocument(users);
-    await waitFor(() => tinyprobe.inspector.get(users.fsPath), 'the inspection of the workflow');
+    const json = await waitFor(() => tinyprobe.inspector.get(users.fsPath), 'the inspection of the workflow');
+    await waitFor(() => tinyprobe.tinyprobe.version, 'the version of the binary');
     const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', users);
-    assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow']);
+    const lines = new Set(json.steps.map(s => s.location.line));
+    assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow', ...[...lines].map(() => 'tinyprobe.runToHere')]);
+
+    // The lens of a step runs up to it: its number, as `--to` takes it, on the step's line.
+    const third = json.steps[2];
+    const lens = lenses.find(l => l.command.command === 'tinyprobe.runToHere' && l.range.start.line === third.location.line - 1);
+    assert.deepEqual(lens.command.arguments, [users, 3]);
+  });
+
+  await check('Run to here runs the workflow up to the step and shows it in the run view', async () => {
+    await vscode.commands.executeCommand('tinyprobe.runToHere', users, 2);
+    const finished = await waitFor(() => tinyprobe.runView.events.find(e => e.event === 'run_finished'), 'the end of the run');
+    const started = tinyprobe.runView.events.find(e => e.event === 'run_started');
+    assert.equal(started.to, 1);
+    assert.equal(finished.success, true);
+    assert.equal(finished.summary.stopped_after, 1);
+    assert.equal(finished.summary.total_steps, 2);
   });
 
   await check('problems are shown where they are, with the message of tinyprobe', async () => {

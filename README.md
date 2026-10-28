@@ -10,6 +10,7 @@ Explore endpoints and run [tinyprobe](https://github.com/kikutano/tinyprobe) API
 - **Completion and hover.** While you type, the keys you can write where the cursor is, with what they do; after `call:`, the endpoints of the workflow and of its imports (also while the workflow is not valid yet); in `with:`, the arguments of the called endpoint, required ones first. Hover on a key or on the endpoint of a `call` to see what it is. Needs tinyprobe 0.14.0 or newer.
 - **Call an endpoint.** A **▶ Call** link sits above every endpoint of an API file. It asks for the required params, lets you pick optional ones, and shows the response, whatever its status. The last values are remembered for each endpoint.
 - **Run workflows.** **▶ Run workflow** at the top of a workflow, or the **Test Explorer**: each workflow is a test suite and each step a test, updated live as the run goes. A failed step shows why, at its line.
+- **Run to here.** **Run to here** on every step runs the workflow up to that step and shows its request and response: the step that needs the token and the ids of the steps before it, without running the rest. The steps before it run again each time, so nothing is kept between runs.
 - **See every exchange.** The run view lists the steps; select one to see its checks, saved values, request and response.
 - **Generate tests with AI.** **tinyprobe: Generate Tests with AI** opens VS Code's chat in agent mode with the prompt that asks the agent to read your backend's routes, authentication and seed data, and to write and run the tinyprobe tests. It uses the model you already have, and the tinyprobe tools (below) to check its work. The prompt is also copied to the clipboard, for any other agent.
 - **Migrate with AI.** **tinyprobe: Migrate with AI** finds the Postman collections and environments, Insomnia and Bruno exports, OpenAPI documents and HAR recordings of the workspace, and writes the prompt that asks your coding agent to convert the one you pick, following `tinyprobe guide`. The prompt goes into VS Code's chat, ready to review and send, and on the clipboard for any other agent. It is also in the explorer's context menu of those files.
@@ -32,7 +33,7 @@ To try it right away, open the [example](https://github.com/kikutano/tinyprobe/t
 
 ## Requirements
 
-[tinyprobe](https://github.com/kikutano/tinyprobe#install) 0.10.0 or newer, on the `PATH` or set with `tinyprobe.path`; the tools for the chat need 0.13.0 and VS Code 1.101 or newer:
+[tinyprobe](https://github.com/kikutano/tinyprobe#install) 0.10.0 or newer, on the `PATH` or set with `tinyprobe.path`; the tools for the chat need 0.13.0 and VS Code 1.101 or newer, and Run to here needs 0.18.0:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.sh | sh

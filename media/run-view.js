@@ -47,7 +47,7 @@
     let selected = null;
 
     function reset(title, environment) {
-      state = { title, environment, steps: [], started: false, finished: null, invalid: null, error: null };
+      state = { title, environment, steps: [], started: false, finished: null, invalid: null, error: null, to: null };
       selected = null;
       render();
     }
@@ -66,6 +66,8 @@
       switch (event.event) {
         case 'run_started':
           state.started = true;
+          // Run to here (`run --to`): the step to show when it completes, unless an earlier one failed.
+          state.to = event.to ?? null;
           for (const s of event.steps) Object.assign(step(s.index), { name: s.name, type: s.type });
           break;
         case 'step_started': {
@@ -76,7 +78,8 @@
         }
         case 'step_completed': {
           const s = Object.assign(step(event.index), { status: event.success ? 'passed' : 'failed', result: event });
-          if (selected === null || !event.success || state.steps.length === 1) selected = s.index;
+          const failedBefore = state.steps.some(x => x.index < s.index && x.status === 'failed');
+          if (selected === null || !event.success || state.steps.length === 1 || (s.index === state.to && !failedBefore)) selected = s.index;
           break;
         }
         case 'run_finished':
