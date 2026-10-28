@@ -1,6 +1,7 @@
 'use strict';
 
 const vscode = require('vscode');
+const fs = require('node:fs');
 const protocol = require('./protocol');
 const { Tinyprobe } = require('./tinyprobe');
 const { Inspector } = require('./inspector');
@@ -11,6 +12,8 @@ const { TinyprobeCodeLens } = require('./codelens');
 const { Migrator } = require('./migrate');
 const { McpServerProvider } = require('./mcp');
 const { TinyprobeEditing } = require('./editing');
+const { RequestHistory } = require('./history');
+const { EnvironmentView } = require('./environmentView');
 
 const YAML = [{ language: 'yaml', scheme: 'file' }];
 
@@ -20,14 +23,16 @@ function activate(context) {
   const inspector = new Inspector(tinyprobe);
   const runView = new RunView(context);
   const tests = new WorkflowTests(tinyprobe, inspector, runView);
-  const caller = new EndpointCaller(tinyprobe, inspector, runView);
+  const history = new RequestHistory(context, runView, inspector);
+  const caller = new EndpointCaller(tinyprobe, inspector, runView, history);
+  const environment = new EnvironmentView(tinyprobe);
   const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri), () => tinyprobe.version);
   // "Run to here" appears once the binary's version is known.
   tinyprobe.versionChanged = () => lenses.changed.fire();
   const migrator = new Migrator();
   const mcp = new McpServerProvider(tinyprobe);
   const editing = new TinyprobeEditing(tinyprobe, inspector);
-  context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses, mcp);
+  context.subscriptions.push(tinyprobe, inspector, runView, tests, lenses, mcp, history, environment);
 
   const isTinyprobe = document => document.uri.scheme === 'file' && document.languageId === 'yaml' && protocol.isTinyprobeFile(document.getText());
   const validateOnSave = () => vscode.workspace.getConfiguration('tinyprobe').get('validateOnSave');
@@ -85,6 +90,28 @@ function activate(context) {
       if (runView.hasRun) runView.show();
       else vscode.window.showInformationMessage('tinyprobe: nothing has run yet.');
     }),
+    vscode.commands.registerCommand('tinyprobe.history.show', entry => history.show(entry)),
+    vscode.commands.registerCommand('tinyprobe.history.sendAgain', async entry => {
+      if (!entry) return;
+      const file = vscode.Uri.file(entry.file);
+      if (!fs.existsSync(entry.file)) {
+        vscode.window.showWarningMessage(`tinyprobe: ${vscode.workspace.asRelativePath(file)} no longer exists.`);
+        return;
+      }
+      await saveIfDirty(file);
+      if (!(await tinyprobe.ensureEnvironment())) return;
+      await caller.send(file, entry.endpoint, entry.args);
+    }),
+    vscode.commands.registerCommand('tinyprobe.history.openEndpoint', entry => history.openEndpoint(entry)),
+    vscode.commands.registerCommand('tinyprobe.history.remove', entry => history.remove(entry)),
+    vscode.commands.registerCommand('tinyprobe.history.clear', () => history.clear()),
+    vscode.commands.registerCommand('tinyprobe.environment.open', variable => environment.open(variable)),
+    vscode.commands.registerCommand('tinyprobe.environment.edit', variable => environment.edit(variable)),
+    vscode.commands.registerCommand('tinyprobe.environment.add', () => environment.add()),
+    vscode.commands.registerCommand('tinyprobe.environment.remove', variable => environment.remove(variable)),
+    vscode.commands.registerCommand('tinyprobe.environment.copy', variable => environment.copy(variable)),
+    vscode.commands.registerCommand('tinyprobe.environment.showValues', () => environment.setShowSecrets(true)),
+    vscode.commands.registerCommand('tinyprobe.environment.hideValues', () => environment.setShowSecrets(false)),
     vscode.commands.registerCommand('tinyprobe.validate', async uri => {
       const file = target(uri);
       if (!file) return;
@@ -100,7 +127,7 @@ function activate(context) {
   updateContext(vscode.window.activeTextEditor);
 
   // The extension's API, used by the integration tests.
-  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator, mcp, editing };
+  return { tinyprobe, inspector, runView, tests, caller, lenses, migrator, mcp, editing, history, environment };
 }
 
 /** tinyprobe reads files from disk: unsaved changes are saved first, as a run would expect. */

@@ -145,6 +145,85 @@ async function run() {
     assert.match(invalid.errors[0].message, /missing required param 'lastName'/);
   });
 
+  await check('a call that was sent goes to the History view, newest first; one that sent nothing does not', async () => {
+    const [last] = tinyprobe.history.entries;
+    assert.equal(last.endpoint, 'status', 'the invalid create_user call is not kept');
+    assert.deepEqual(last.args, [['code', '404']]);
+    assert.equal(last.status, 404);
+    assert.equal(last.success, true);
+    assert.equal(last.method, 'GET');
+    assert.equal(last.environment, path.join(root, 'environment.yaml'));
+
+    const item = tinyprobe.history.getTreeItem(last);
+    assert.equal(item.label, 'status');
+    assert.match(item.description, /^404 · \d+ ms · /);
+    assert.deepEqual(item.command.arguments, [last]);
+
+    // Kept in the extension's storage, for the next session.
+    await tinyprobe.history.saving;
+    const saved = JSON.parse(fs.readFileSync(tinyprobe.history.file, 'utf8'));
+    assert.equal(saved[0].id, last.id);
+  });
+
+  await check('a call of the history is shown again in the run view, and sent again with the same arguments', async () => {
+    const last = tinyprobe.history.entries[0];
+    await tinyprobe.caller.send(api, 'status', [['code', '201']]);
+    assert.equal(tinyprobe.history.entries[0].status, 201);
+
+    await vscode.commands.executeCommand('tinyprobe.history.show', last);
+    assert.equal(tinyprobe.runView.title.startsWith('status ('), true, tinyprobe.runView.title);
+    assert.deepEqual(tinyprobe.runView.events, last.events);
+
+    const count = tinyprobe.history.entries.length;
+    await vscode.commands.executeCommand('tinyprobe.history.sendAgain', last);
+    const again = tinyprobe.history.entries[0];
+    assert.equal(tinyprobe.history.entries.length, count + 1);
+    assert.equal(again.endpoint, 'status');
+    assert.deepEqual(again.args, [['code', '404']]);
+    assert.notEqual(again.id, last.id);
+    assert.equal(again.status, 404);
+
+    await vscode.commands.executeCommand('tinyprobe.history.remove', again);
+    assert.equal(tinyprobe.history.entries.length, count);
+  });
+
+  await check('the Environment view lists the variables of the selected file, secrets hidden until shown', async () => {
+    const view = tinyprobe.environment;
+    view.refresh();
+    const variables = view.variables();
+    assert.deepEqual(variables.map(v => v.name), ['baseUrl', 'apiKey', 'clientId', 'clientSecret']);
+    assert.equal(variables[0].value, 'http://localhost:5122/');
+    assert.equal(view.view.description, 'environment.yaml');
+
+    const apiKey = view.getTreeItem(variables[1]);
+    assert.equal(apiKey.description, '••••••••');
+    view.setShowSecrets(true);
+    assert.equal(view.getTreeItem(view.variables()[1]).description, 'tinyprobe-test-api-key');
+    view.setShowSecrets(false);
+    assert.equal(view.getTreeItem(variables[0]).description, 'http://localhost:5122/');
+  });
+
+  await check('the Environment view edits the file: add, change and delete a variable, the rest kept', async () => {
+    const view = tinyprobe.environment;
+    const envFile = path.join(root, 'environment.yaml');
+    const original = fs.readFileSync(envFile, 'utf8');
+    const env = require('../../src/environmentFile');
+    const find = name => env.parse(fs.readFileSync(envFile, 'utf8')).find(v => v.name === name);
+    try {
+      await view.write(envFile, text => env.addVariable(text, 'retries', '3'));
+      assert.equal(fs.readFileSync(envFile, 'utf8'), original + 'retries: 3\n', 'saved to disk');
+      assert.ok(view.variables().some(v => v.name === 'retries'));
+
+      await view.write(envFile, text => env.setValue(text, find('retries'), 'a: b'));
+      assert.equal(find('retries').raw, '"a: b"');
+
+      await view.write(envFile, text => env.removeVariable(text, find('retries')));
+      assert.equal(fs.readFileSync(envFile, 'utf8'), original);
+    } finally {
+      fs.writeFileSync(envFile, original);
+    }
+  });
+
   await check('without a chosen environment, a run first asks for one; dismissing it cancels the run', async () => {
     const state = tinyprobe.tinyprobe.context.workspaceState;
     const chosen = state.get('tinyprobe.environment');

@@ -26,6 +26,8 @@ Plain JavaScript (CommonJS), no dependency, no build step.
 - `src/migration.js` (no VS Code API: recognises exports, writes the agent prompt) and `src/migrate.js` (the "Migrate with AI" command: workspace scan, chat, clipboard).
 - `src/editing.js`: completion and hover. The YAML context (path at the cursor, sibling keys) is in `src/protocol.js`; keys come from `tinyprobe schema`, endpoints from the inspection.
 - `src/mcp.js`: registers `tinyprobe mcp` with VS Code (`vscode.lm.registerMcpServerDefinitionProvider`), only when the binary has it (`protocol.supportsMcp`).
+- `src/history.js` (History view: calls recorded by `call.js`, kept as JSON in the extension's `storageUri`; the entry itself is built by `protocol.historyEntry`).
+- `src/environmentFile.js` (no VS Code API: the variables of an environment file and text edits of one variable, comments kept; a text editor's view of the file, the values are still read by the binary) and `src/environmentView.js` (Environment view, edits through a `WorkspaceEdit` so Undo works).
 - `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view.js` (webview; renders ndjson events in any browser, meant to be reused by other front ends).
 - `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the tinyprobe repo.
 
