@@ -46,6 +46,43 @@
         "label": "tinyprobe"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tinyprobe",
+          "title": "tinyprobe",
+          "icon": "media/activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "tinyprobe": [
+        {
+          "id": "tinyprobe.environment",
+          "name": "Environment"
+        },
+        {
+          "id": "tinyprobe.history",
+          "name": "History"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "tinyprobe.environment",
+        "when": "!tinyprobe.hasEnvironment",
+        "contents": "No environment file is selected. Runs and calls get their variables from it with -e.\n[Select Environment](command:tinyprobe.selectEnvironment)\nEnvironment files are named env*.yaml or environment.yaml."
+      },
+      {
+        "view": "tinyprobe.environment",
+        "when": "tinyprobe.hasEnvironment",
+        "contents": "This environment has no variables yet.\n[Add Variable](command:tinyprobe.environment.add)"
+      },
+      {
+        "view": "tinyprobe.history",
+        "contents": "The calls you make with Call on an endpoint appear here, with their responses, to see again or send again."
+      }
+    ],
     "commands": [
       {
         "command": "tinyprobe.runToHere",
@@ -76,7 +113,8 @@
       {
         "command": "tinyprobe.selectEnvironment",
         "title": "Select Environment",
-        "category": "tinyprobe"
+        "category": "tinyprobe",
+        "icon": "$(server-environment)"
       },
       {
         "command": "tinyprobe.showRun",
@@ -87,6 +125,74 @@
         "command": "tinyprobe.validate",
         "title": "Validate File",
         "category": "tinyprobe"
+      },
+      {
+        "command": "tinyprobe.history.show",
+        "title": "Show Response",
+        "category": "tinyprobe"
+      },
+      {
+        "command": "tinyprobe.history.sendAgain",
+        "title": "Send Again",
+        "category": "tinyprobe",
+        "icon": "$(debug-rerun)"
+      },
+      {
+        "command": "tinyprobe.history.openEndpoint",
+        "title": "Open Endpoint",
+        "category": "tinyprobe",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "tinyprobe.history.remove",
+        "title": "Remove from History",
+        "category": "tinyprobe"
+      },
+      {
+        "command": "tinyprobe.history.clear",
+        "title": "Clear History",
+        "category": "tinyprobe",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "tinyprobe.environment.open",
+        "title": "Open Environment File",
+        "category": "tinyprobe",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "tinyprobe.environment.edit",
+        "title": "Edit Value",
+        "category": "tinyprobe",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "tinyprobe.environment.add",
+        "title": "Add Variable",
+        "category": "tinyprobe",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tinyprobe.environment.remove",
+        "title": "Delete Variable",
+        "category": "tinyprobe"
+      },
+      {
+        "command": "tinyprobe.environment.copy",
+        "title": "Copy Value",
+        "category": "tinyprobe"
+      },
+      {
+        "command": "tinyprobe.environment.showValues",
+        "title": "Show Secret Values",
+        "category": "tinyprobe",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "tinyprobe.environment.hideValues",
+        "title": "Hide Secret Values",
+        "category": "tinyprobe",
+        "icon": "$(eye-closed)"
       }
     ],
     "menus": {
@@ -106,6 +212,46 @@
         {
           "command": "tinyprobe.runToHere",
           "when": "false"
+        },
+        {
+          "command": "tinyprobe.history.show",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.history.sendAgain",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.history.openEndpoint",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.history.remove",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.open",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.edit",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.remove",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.copy",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.showValues",
+          "when": "false"
+        },
+        {
+          "command": "tinyprobe.environment.hideValues",
+          "when": "false"
         }
       ],
       "explorer/context": [
@@ -120,6 +266,85 @@
           "command": "tinyprobe.runWorkflow",
           "when": "resourceLangId == yaml && tinyprobe.isWorkflow",
           "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tinyprobe.environment.add",
+          "when": "view == tinyprobe.environment",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tinyprobe.selectEnvironment",
+          "when": "view == tinyprobe.environment",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tinyprobe.environment.open",
+          "when": "view == tinyprobe.environment && tinyprobe.hasEnvironment",
+          "group": "navigation@3"
+        },
+        {
+          "command": "tinyprobe.environment.showValues",
+          "when": "view == tinyprobe.environment && !tinyprobe.showSecrets",
+          "group": "navigation@4"
+        },
+        {
+          "command": "tinyprobe.environment.hideValues",
+          "when": "view == tinyprobe.environment && tinyprobe.showSecrets",
+          "group": "navigation@4"
+        },
+        {
+          "command": "tinyprobe.history.clear",
+          "when": "view == tinyprobe.history",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tinyprobe.environment.edit",
+          "when": "view == tinyprobe.environment && viewItem =~ /^tinyprobe\\.environment(Variable|Block)$/",
+          "group": "inline"
+        },
+        {
+          "command": "tinyprobe.environment.edit",
+          "when": "view == tinyprobe.environment && viewItem =~ /^tinyprobe\\.environment(Variable|Block)$/",
+          "group": "1_edit@1"
+        },
+        {
+          "command": "tinyprobe.environment.copy",
+          "when": "view == tinyprobe.environment && viewItem =~ /^tinyprobe\\.environment(Variable|Block)$/",
+          "group": "1_edit@2"
+        },
+        {
+          "command": "tinyprobe.environment.remove",
+          "when": "view == tinyprobe.environment && viewItem =~ /^tinyprobe\\.environment(Variable|Block)$/",
+          "group": "2_delete"
+        },
+        {
+          "command": "tinyprobe.history.sendAgain",
+          "when": "view == tinyprobe.history && viewItem == tinyprobe.historyEntry",
+          "group": "inline"
+        },
+        {
+          "command": "tinyprobe.history.sendAgain",
+          "when": "view == tinyprobe.history && viewItem == tinyprobe.historyEntry",
+          "group": "1_call@1"
+        },
+        {
+          "command": "tinyprobe.history.show",
+          "when": "view == tinyprobe.history && viewItem == tinyprobe.historyEntry",
+          "group": "1_call@2"
+        },
+        {
+          "command": "tinyprobe.history.openEndpoint",
+          "when": "view == tinyprobe.history && viewItem == tinyprobe.historyEntry",
+          "group": "1_call@3"
+        },
+        {
+          "command": "tinyprobe.history.remove",
+          "when": "view == tinyprobe.history && viewItem == tinyprobe.historyEntry",
+          "group": "2_remove"
         }
       ]
     },

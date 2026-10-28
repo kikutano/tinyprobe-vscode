@@ -20,6 +20,9 @@ class Tinyprobe {
     this.context = context;
     this.output = vscode.window.createOutputChannel('tinyprobe');
     this.warned = new Set();
+    this.environmentChanged = new vscode.EventEmitter();
+    /** Fired when another environment file (or none) is selected. */
+    this.onDidChangeEnvironment = this.environmentChanged.event;
 
     this.status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
     this.status.command = 'tinyprobe.selectEnvironment';
@@ -30,6 +33,7 @@ class Tinyprobe {
   dispose() {
     this.output.dispose();
     this.status.dispose();
+    this.environmentChanged.dispose();
   }
 
   command() {
@@ -176,6 +180,7 @@ class Tinyprobe {
 
     await this.context.workspaceState.update(ENVIRONMENT_KEY, picked.file);
     this.updateStatus();
+    this.environmentChanged.fire();
     return true;
   }
 

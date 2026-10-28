@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **History view**, in the new tinyprobe sidebar: the last 50 calls made with ▶ Call, newest first, with their status, duration and time. A click shows the request and response again in the run view; **Send Again** repeats a call with the same arguments and the environment selected now; **Open Endpoint** goes to its API file. The history is kept per workspace in VS Code's storage, bodies cut at 64 KiB; **Clear History** empties it.
+- **Environment view**, in the same sidebar: the variables of the selected environment file, then those of `tinyprobe.variables`, marked as winning over the file. Edit a value, add or delete a variable: the file is changed in place and saved, its comments and order kept, and Undo works. Values typed like YAML, as in ▶ Call. Names that look like secrets have their values hidden until shown with the eye.
+
 ## 0.6.0
 
 - **Run to here**: a lens on every step of a workflow runs it up to that step (`tinyprobe run --to`) and opens the run view on it, with its request and response. The steps of a sequence share the line of their `use`, whose lens runs the whole sequence. Needs tinyprobe 0.18.0 or newer; with an older binary the lens is not shown and everything else works as before.

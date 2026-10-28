@@ -15,11 +15,13 @@ class EndpointCaller {
    * @param {import('./tinyprobe').Tinyprobe} tinyprobe
    * @param {import('./inspector').Inspector} inspector
    * @param {import('./runView').RunView} runView
+   * @param {import('./history').RequestHistory} [history]
    */
-  constructor(tinyprobe, inspector, runView) {
+  constructor(tinyprobe, inspector, runView, history) {
     this.tinyprobe = tinyprobe;
     this.inspector = inspector;
     this.runView = runView;
+    this.history = history;
   }
 
   /** @param {vscode.Uri} uri @param {string | undefined} name */
@@ -123,6 +125,7 @@ class EndpointCaller {
       } else if (result.code === 2 && result.stderr.trim()) {
         this.runView.error(result.stderr.trim());
       } else {
+        await this.history?.record({ file: uri.fsPath, endpoint, args, environment: options.environment, events });
         this.tinyprobe.explainUndefinedVariables(events);
       }
     } catch (error) {

@@ -15,7 +15,9 @@ Explore endpoints and run [tinyprobe](https://github.com/kikutano/tinyprobe) API
 - **Generate tests with AI.** **tinyprobe: Generate Tests with AI** opens VS Code's chat in agent mode with the prompt that asks the agent to read your backend's routes, authentication and seed data, and to write and run the tinyprobe tests. It uses the model you already have, and the tinyprobe tools (below) to check its work. The prompt is also copied to the clipboard, for any other agent.
 - **Migrate with AI.** **tinyprobe: Migrate with AI** finds the Postman collections and environments, Insomnia and Bruno exports, OpenAPI documents and HAR recordings of the workspace, and writes the prompt that asks your coding agent to convert the one you pick, following `tinyprobe guide`. The prompt goes into VS Code's chat, ready to review and send, and on the clipboard for any other agent. It is also in the explorer's context menu of those files.
 - **Tools for the chat.** The extension gives VS Code's chat agents (Copilot and others) the tinyprobe tools, from `tinyprobe mcp`: `guide`, `inspect`, `call` and `run`, with nothing to configure. They appear in the chat's tool list as **tinyprobe**; VS Code asks you before an agent sends requests with `call` or `run`. Needs tinyprobe 0.13.0 or newer.
-- **Environments.** The environment file (`env.local.yaml`, `env.dev.yaml`...) is passed to every run and call. Pick it in the status bar, bottom left; the choice is kept for each folder. If you have not picked one yet and the folder has environment files, the first run or call asks which one to use. When a step fails on an undefined variable, a message tells you, with a button to change the environment.
+- **Request history.** The **History** view, in the tinyprobe sidebar, lists your last 50 calls, newest first, with their status and time. Click one to see its request and response again in the run view; **Send Again** repeats it with the same arguments and the environment selected now, and **Open Endpoint** goes to it in its API file.
+- **Environments.** The environment file (`env.local.yaml`, `env.dev.yaml`...) is passed to every run and call. Pick it in the status bar, bottom left, or at the top of the **Environment** view; the choice is kept for each folder. If you have not picked one yet and the folder has environment files, the first run or call asks which one to use. When a step fails on an undefined variable, a message tells you, with a button to change the environment.
+- **Edit the environment.** The **Environment** view, in the tinyprobe sidebar, lists the variables of the selected file, then those of the `tinyprobe.variables` setting, which win over it. Edit a value, add a variable or delete one there: the change is written to the file and saved, its comments and order kept, and **Undo** in the file takes it back. Values whose name looks like a secret (`password`, `apiKey`, `clientSecret`, `token`...) are hidden until you click the eye.
 
 The extension has no runtime dependency and no engine of its own: it runs the `tinyprobe` binary, and reads its [JSON protocol](https://github.com/kikutano/tinyprobe/blob/main/docs/protocol.md). What you see in VS Code is what `tinyprobe run` does in CI.
 
@@ -58,6 +60,8 @@ irm https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.ps1 | iex
 - **tinyprobe: Generate Tests with AI**: the prompt that asks your coding agent to write the tests from your backend's code.
 - **tinyprobe: Migrate with AI**: the prompt that hands a Postman, Insomnia, Bruno, OpenAPI or HAR export to your coding agent.
 - **tinyprobe: Select Environment**: the environment file passed with `-e`.
+- **tinyprobe: Add Variable**: adds a variable to the selected environment file.
+- **tinyprobe: Clear History**: empties the History view.
 - **tinyprobe: Show Last Run**: reopens the run view.
 - **tinyprobe: Validate File**: validates the current file now.
 
@@ -67,7 +71,7 @@ A YAML file with a top-level `endpoints:` or `steps:` key is a tinyprobe file; o
 
 A step cannot run on its own, since it uses the values saved by the steps before it: running a step from the Test Explorer runs its whole workflow.
 
-**Secrets.** The run view shows requests as they are sent, `Authorization` headers included. They stay in VS Code: nothing is written to disk or sent anywhere.
+**Secrets.** The run view shows requests as they are sent, `Authorization` headers included. They stay on your machine: nothing is sent anywhere. The History view keeps its calls, requests and responses included (bodies cut at 64 KiB), in VS Code's storage for the workspace, not in the folder: **Clear History** deletes them.
 
 ## Development
 
