@@ -139,6 +139,10 @@ test('schema needs tinyprobe 0.14.0, or a development build', () => {
   assert.equal(protocol.supportsSchema('0.14.0'), true);
   assert.equal(protocol.supportsSchema('0.13.0'), false);
   assert.equal(protocol.supportsSchema('0.0.0-dev'), true);
+  assert.equal(protocol.supportsRunTo('0.18.0'), true);
+  assert.equal(protocol.supportsRunTo('0.17.0'), false);
+  assert.equal(protocol.supportsRunTo('0.0.0-dev'), true);
+  assert.equal(protocol.supportsRunTo(undefined), false);
 });
 
 const workflow = [
@@ -234,5 +238,26 @@ test('with suggestions put what a step usually passes first', () => {
     { name: 'id', detail: 'in the path' },
     { name: 'baseUrl', detail: 'variable, usually from the environment or a saved value' },
     { name: 'token', detail: 'variable, usually from the environment or a saved value' }
+  ]);
+});
+
+test('runArgs adds --to before the reporter, only when a step is given', () => {
+  assert.deepEqual(protocol.runArgs('flow.yaml', { to: 3 }), ['run', 'flow.yaml', '--to', '3', '--reporter', 'ndjson']);
+  assert.deepEqual(protocol.runArgs('flow.yaml', { to: undefined }), ['run', 'flow.yaml', '--reporter', 'ndjson']);
+});
+
+test('runToTargets gives one lens per line of steps, running to the last step of the line', () => {
+  const step = (index, line, name, file = 'flow.yaml') => ({ index, name, location: { file, line, column: 5 } });
+  const json = {
+    steps: [
+      step(0, 4, 'Log in › Get a token'),   // a sequence used on line 4: two steps, one lens
+      step(1, 4, 'Log in › Me'),
+      step(2, 7, 'List orders'),
+      step(3, 2, 'Other', 'other.yaml')
+    ]
+  };
+  assert.deepEqual(protocol.runToTargets(json, file => file === 'flow.yaml'), [
+    { line: 3, step: 2, name: 'Log in › Me' },
+    { line: 6, step: 3, name: 'List orders' }
   ]);
 });

@@ -17,6 +17,9 @@ const MCP_VERSION = '0.13.0';
 /** The first version with `tinyprobe schema`, which completion and hover need. */
 const SCHEMA_VERSION = '0.14.0';
 
+/** The first version with `tinyprobe run --to`, which "Run to here" needs. */
+const RUN_TO_VERSION = '0.18.0';
+
 /**
  * Splits text that arrives in chunks into lines: NDJSON events can be cut anywhere
  * by the pipe. Empty lines are skipped.
@@ -75,9 +78,9 @@ function commonArgs({ environment, variables } = {}) {
   ];
 }
 
-/** Arguments of `tinyprobe run` with the NDJSON reporter. */
+/** Arguments of `tinyprobe run` with the NDJSON reporter; `to` (a step number) stops after that step. */
 function runArgs(file, options) {
-  return ['run', file, ...commonArgs(options)];
+  return ['run', file, ...(options?.to ? ['--to', String(options.to)] : []), ...commonArgs(options)];
 }
 
 /** Arguments of `tinyprobe call`; `args` are `[name, value]` pairs, values typed like YAML. */
@@ -165,6 +168,26 @@ function supportsMcp(version) {
 /** Whether the binary has `tinyprobe schema`. */
 function supportsSchema(version) {
   return /^0\.0\.0-/.test(version) || compareVersions(version, SCHEMA_VERSION) >= 0;
+}
+
+/** Whether the binary has `tinyprobe run --to`. */
+function supportsRunTo(version) {
+  return !!version && (/^0\.0\.0-/.test(version) || compareVersions(version, RUN_TO_VERSION) >= 0);
+}
+
+/**
+ * The "Run to here" lenses of a workflow: one per line of the file that has steps, running up to the last step
+ * on that line. The steps of a sequence all have the line of their `use` step, so its lens runs the whole sequence.
+ * Returns `{ line, step, name }`, with `line` 0-based and `step` the 1-based number that `--to` takes.
+ */
+function runToTargets(json, isThisFile) {
+  const byLine = new Map();
+  for (const step of json.steps ?? []) {
+    if (!step.location || !isThisFile(step.location.file)) continue;
+    const { line } = toPosition(step.location);
+    byLine.set(line, { line, step: step.index + 1, name: step.name });
+  }
+  return [...byLine.values()].sort((a, b) => a.line - b.line);
 }
 
 // --- Completion and hover --------------------------------------------------------
@@ -380,6 +403,9 @@ module.exports = {
   isSupportedVersion,
   supportsMcp,
   supportsSchema,
+  supportsRunTo,
+  runToTargets,
+  RUN_TO_VERSION,
   parseYamlLine,
   yamlPath,
   itemValue,

@@ -21,7 +21,9 @@ function activate(context) {
   const runView = new RunView(context);
   const tests = new WorkflowTests(tinyprobe, inspector, runView);
   const caller = new EndpointCaller(tinyprobe, inspector, runView);
-  const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri));
+  const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri), () => tinyprobe.version);
+  // "Run to here" appears once the binary's version is known.
+  tinyprobe.versionChanged = () => lenses.changed.fire();
   const migrator = new Migrator();
   const mcp = new McpServerProvider(tinyprobe);
   const editing = new TinyprobeEditing(tinyprobe, inspector);
@@ -63,6 +65,12 @@ function activate(context) {
       if (!file) return;
       await saveIfDirty(file);
       await tests.runFile(file);
+    }),
+    vscode.commands.registerCommand('tinyprobe.runToHere', async (uri, step) => {
+      const file = target(uri);
+      if (!file || typeof step !== 'number') return;
+      await saveIfDirty(file);
+      await tests.runFile(file, { to: step });
     }),
     vscode.commands.registerCommand('tinyprobe.callEndpoint', async (uri, endpoint) => {
       const file = target(uri);

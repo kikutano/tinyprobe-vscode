@@ -105,6 +105,9 @@ class Tinyprobe {
     }
 
     const version = result.stdout.trim();
+    // Features of newer binaries (Run to here) are offered only when this one has them.
+    this.version = version;
+    this.versionChanged?.();
     this.log(`Using tinyprobe ${version} (${this.command()})`);
     if (!protocol.isSupportedVersion(version)) {
       vscode.window.showWarningMessage(
