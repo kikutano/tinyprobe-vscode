@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 const vscode = require('vscode');
+const protocol = require('../../src/protocol');
 
 const results = [];
 
@@ -62,8 +63,13 @@ async function run() {
   await check('a workflow gets a Run CodeLens, a Run to here lens per step line, and no Call lens for imported endpoints', async () => {
     await vscode.window.showTextDocument(users);
     const json = await waitFor(() => tinyprobe.inspector.get(users.fsPath), 'the inspection of the workflow');
-    await waitFor(() => tinyprobe.tinyprobe.version, 'the version of the binary');
+    const version = await waitFor(() => tinyprobe.tinyprobe.version, 'the version of the binary');
     const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', users);
+    if (!protocol.supportsRunTo(version)) {
+      // A released binary older than --to: no Run to here, everything else as before.
+      assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow']);
+      return;
+    }
     const lines = new Set(json.steps.map(s => s.location.line));
     assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow', ...[...lines].map(() => 'tinyprobe.runToHere')]);
 
@@ -74,6 +80,7 @@ async function run() {
   });
 
   await check('Run to here runs the workflow up to the step and shows it in the run view', async () => {
+    if (!protocol.supportsRunTo(tinyprobe.tinyprobe.version)) return;
     await vscode.commands.executeCommand('tinyprobe.runToHere', users, 2);
     const finished = await waitFor(() => tinyprobe.runView.events.find(e => e.event === 'run_finished'), 'the end of the run');
     const started = tinyprobe.runView.events.find(e => e.event === 'run_started');
