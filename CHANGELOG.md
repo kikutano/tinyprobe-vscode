@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
 - **Run to here**: a lens on every step of a workflow runs it up to that step (`tinyprobe run --to`) and opens the run view on it, with its request and response. The steps of a sequence share the line of their `use`, whose lens runs the whole sequence. Needs tinyprobe 0.18.0 or newer; with an older binary the lens is not shown and everything else works as before.
+- Completion and hover know the keys added by tinyprobe 0.17 and 0.18 (`form`, `multipart`, `cookies`, `basic`, `oauth2`, `for_each`, `use`, `sequence`, named imports), from `tinyprobe schema`, and the run view shows the `Cookie` and `Authorization` headers as sent.
 
 ## 0.5.0
 
