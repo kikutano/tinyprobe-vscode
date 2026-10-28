@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - **History view**, in the new tinyprobe sidebar: the last 50 calls made with ▶ Call, newest first, with their status, duration and time. A click shows the request and response again in the run view; **Send Again** repeats a call with the same arguments and the environment selected now; **Open Endpoint** goes to its API file. The history is kept per workspace in VS Code's storage, bodies cut at 64 KiB; **Clear History** empties it.
 - **Environment view**, in the same sidebar: the variables of the selected environment file, then those of `tinyprobe.variables`, marked as winning over the file. Edit a value, add or delete a variable: the file is changed in place and saved, its comments and order kept, and Undo works. Values typed like YAML, as in ▶ Call. Names that look like secrets have their values hidden until shown with the eye.
