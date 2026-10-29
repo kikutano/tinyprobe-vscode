@@ -379,3 +379,16 @@ test('the items of a for_each step: their label, and why the step failed', () =>
   assert.deepEqual(protocol.forEachFailureLines({ success: false, failure: 'x', assertions: [], iterations: null }), ['x']);
   assert.deepEqual(protocol.forEachFailureLines({ success: false, failure: 'x', assertions: [], iterations: [] }), ['x']);
 });
+
+test('go to definition on the file of a schema check, not on a schema written in place', () => {
+  const lines = [
+    '    body:',
+    '      $: { schema: ../openapi.yaml#/components/schemas/User }',
+    '      $.id: { schema: { type: integer } }',
+    "      $.page: { schema: '../schemas/page.json' }"
+  ];
+  assert.deepEqual(protocol.definitionContext(lines, 1, 22), { kind: 'file', file: '../openapi.yaml' });
+  assert.equal(protocol.definitionContext(lines, 1, 40), undefined, 'on the pointer');
+  assert.equal(protocol.definitionContext(lines, 2, 22), undefined, 'a schema written in place');
+  assert.deepEqual(protocol.definitionContext(lines, 3, 26), { kind: 'file', file: '../schemas/page.json' });
+});
