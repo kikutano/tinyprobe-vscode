@@ -34,6 +34,16 @@
     }
   }
 
+  /** A `for_each` step reports each item as `Name [2/3]`: the step itself keeps the plain name. */
+  function baseName(name) {
+    return String(name ?? '').replace(/ \[\d+\/\d+\]$/, '');
+  }
+
+  /** What is selected: a step, or one item of a `for_each` step. */
+  function key(index, iteration) {
+    return iteration === null || iteration === undefined ? `${index}` : `${index}.${iteration}`;
+  }
+
   function statusClass(code) {
     if (code === null || code === undefined) return 'status-none';
     if (code < 300) return 'status-ok';
@@ -73,13 +83,24 @@
         case 'step_started': {
           // A step that starts ends the previous sleep, which has no step_completed.
           for (const s of state.steps) if (s.type === 'sleep' && s.status === 'running') s.status = 'passed';
-          Object.assign(step(event.index), { name: event.name, type: event.type, status: 'running', attempt: event.attempt });
+          Object.assign(step(event.index), {
+            name: event.iteration ? baseName(event.name) : event.name,
+            type: event.type,
+            status: 'running',
+            attempt: event.attempt,
+            iteration: event.iteration ?? null,
+            total: event.iterations ?? null
+          });
           break;
         }
         case 'step_completed': {
-          const s = Object.assign(step(event.index), { status: event.success ? 'passed' : 'failed', result: event });
+          const s = Object.assign(step(event.index), { status: event.success ? 'passed' : 'failed', result: event, iteration: null });
           const failedBefore = state.steps.some(x => x.index < s.index && x.status === 'failed');
-          if (selected === null || !event.success || state.steps.length === 1 || (s.index === state.to && !failedBefore)) selected = s.index;
+          // A failed for_each step opens on its first failed item.
+          const failedItem = (event.iterations ?? []).find(i => !i.success);
+          if (selected === null || !event.success || state.steps.length === 1 || (s.index === state.to && !failedBefore)) {
+            selected = key(s.index, failedItem?.iteration);
+          }
           break;
         }
         case 'run_finished':
@@ -170,33 +191,61 @@
     function stepList() {
       const list = element('ol', 'steps');
       for (const s of state.steps) {
-        const item = element('li', `step step-${s.status}${s.index === selected ? ' selected' : ''}`);
-        item.tabIndex = 0;
+        const items = Array.isArray(s.result?.iterations) ? s.result.iterations : null;
+        const item = row(`step step-${s.status}`, key(s.index, null), s.result !== null);
         item.append(element('span', 'icon', { passed: '✓', failed: '✗', running: '●', skipped: '–', pending: '○' }[s.status]));
-        item.append(element('span', 'step-name', s.status === 'running' && s.attempt > 1 ? `${s.name} (attempt ${s.attempt})` : s.name));
-        if (s.result) {
+        item.append(element('span', 'step-name', runningName(s)));
+        if (s.result && items) {
+          const passed = items.filter(i => i.success).length;
+          item.append(element('span', `code ${passed === items.length ? 'status-ok' : 'status-server'}`, `${passed}/${items.length}`));
+          item.append(element('span', 'duration', formatDuration(items.reduce((sum, i) => sum + (i.duration_ms ?? 0), 0))));
+        } else if (s.result) {
           item.append(element('span', `code ${statusClass(s.result.status)}`, s.result.status ?? '---'));
           item.append(element('span', 'duration', formatDuration(s.result.duration_ms)));
         }
-        if (s.result) {
-          const choose = () => { selected = s.index; render(); };
-          item.addEventListener('click', choose);
-          item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } });
-        }
         list.append(item);
+
+        for (const i of items ?? []) {
+          const sub = row(`step step-item step-${i.success ? 'passed' : 'failed'}`, key(s.index, i.iteration), true);
+          sub.append(element('span', 'icon', i.success ? '✓' : '✗'));
+          sub.append(element('span', 'step-name', `item ${i.iteration} of ${items.length}`));
+          sub.append(element('span', `code ${statusClass(i.status)}`, i.status ?? '---'));
+          sub.append(element('span', 'duration', formatDuration(i.duration_ms)));
+          list.append(sub);
+        }
       }
       return list;
     }
 
+    function runningName(s) {
+      if (s.status !== 'running') return s.name;
+      if (s.total) return `${s.name} (item ${s.iteration} of ${s.total})`;
+      return s.attempt > 1 ? `${s.name} (attempt ${s.attempt})` : s.name;
+    }
+
+    /** A row of the step list; one with a result can be selected with a click or the keyboard. */
+    function row(className, id, selectable) {
+      const item = element('li', `${className}${id === selected ? ' selected' : ''}`);
+      item.tabIndex = 0;
+      if (selectable) {
+        const choose = () => { selected = id; render(); };
+        item.addEventListener('click', choose);
+        item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } });
+      }
+      return item;
+    }
+
     function details() {
       const node = element('section', 'details');
-      const s = state.steps.find(x => x.index === selected);
+      const [index, iteration] = String(selected).split('.').map(Number);
+      const s = state.steps.find(x => x.index === index);
       if (!s || !s.result) {
         node.append(message('muted', 'Select a completed step to see its request and response.'));
         return node;
       }
 
-      const r = s.result;
+      // An item of a for_each step has the same fields as a step.
+      const r = (Number.isInteger(iteration) && s.result.iterations?.find(i => i.iteration === iteration)) || s.result;
       node.append(element('h2', null, r.name));
       const line = element('div', 'request-line');
       line.append(element('span', 'method', r.method ?? ''), element('span', 'url', r.url ?? ''));
@@ -206,13 +255,13 @@
         r.status !== null ? `status ${r.status}` : 'no response',
         formatDuration(r.duration_ms),
         r.attempts > 1 ? `${r.attempts} attempts` : null,
-        `sent ${formatBytes(r.bytes_sent)}`,
-        `received ${formatBytes(r.bytes_received)}`
+        typeof r.bytes_sent === 'number' ? `sent ${formatBytes(r.bytes_sent)}` : null,
+        typeof r.bytes_received === 'number' ? `received ${formatBytes(r.bytes_received)}` : null
       ].filter(Boolean);
       node.append(element('div', 'facts', facts.join(' · ')));
 
       if (r.failure) node.append(element('div', 'failure', `✗ ${r.failure}`));
-      if (r.assertions.length > 0) node.append(checks(r.assertions));
+      if ((r.assertions ?? []).length > 0) node.append(checks(r.assertions));
 
       const saved = Object.entries(r.saved ?? {});
       if (saved.length > 0) {

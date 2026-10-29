@@ -102,7 +102,9 @@ class WorkflowTests {
     const items = request.include ?? [...gather(this.controller.items)];
     const workflows = new Map();
     for (const item of items) {
-      const workflow = item.parent ?? item;
+      // A step, or an item of a for_each step, runs its whole workflow.
+      let workflow = item;
+      while (workflow.parent) workflow = workflow.parent;
       workflows.set(workflow.id, workflow);
     }
     const excluded = new Set((request.exclude ?? []).map(item => item.id));
@@ -180,14 +182,17 @@ class WorkflowTests {
         case 'step_completed':
           if (!child) break;
           completed.add(child.id);
+          if (Array.isArray(event.iterations)) this.reportItems(run, child, event.iterations);
           if (event.success) {
             run.passed(child, event.duration_ms);
           } else {
-            const message = new vscode.TestMessage(protocol.failureLines(event).join('\n'));
+            const message = new vscode.TestMessage(protocol.forEachFailureLines(event).join('\n'));
             message.location = new vscode.Location(child.uri, child.range);
             run.failed(child, message, event.duration_ms);
           }
-          run.appendOutput(`${event.success ? '✓' : '✗'} ${event.name}  ${event.method ?? ''} ${event.status ?? '---'}  ${event.url ?? ''}\r\n`, undefined, child);
+          if (!Array.isArray(event.iterations)) {
+            run.appendOutput(`${event.success ? '✓' : '✗'} ${event.name}  ${event.method ?? ''} ${event.status ?? '---'}  ${event.url ?? ''}\r\n`, undefined, child);
+          }
           break;
         case 'run_finished':
           finished = event;
@@ -237,6 +242,29 @@ class WorkflowTests {
       run.errored(item, new vscode.TestMessage(message));
     }
     return events;
+  }
+
+  /**
+   * The items of a `for_each` step become its children, with their own result: how many items there are is
+   * known only once the step has run (a variable or a file may hold the list), so they are made here.
+   */
+  reportItems(run, child, iterations) {
+    const items = iterations.map(iteration => {
+      const test = this.controller.createTestItem(`${child.id}/${iteration.iteration}`, protocol.iterationLabel(iteration, iterations.length), child.uri);
+      test.range = child.range;
+      return { test, iteration };
+    });
+    child.children.replace(items.map(i => i.test));
+    for (const { test, iteration } of items) {
+      if (iteration.success) {
+        run.passed(test, iteration.duration_ms);
+      } else {
+        const message = new vscode.TestMessage(protocol.failureLines(iteration).join('\n'));
+        message.location = new vscode.Location(child.uri, child.range);
+        run.failed(test, message, iteration.duration_ms);
+      }
+      run.appendOutput(`${iteration.success ? '✓' : '✗'} ${iteration.name}  ${iteration.method ?? ''} ${iteration.status ?? '---'}  ${iteration.url ?? ''}\r\n`, undefined, test);
+    }
   }
 }
 
