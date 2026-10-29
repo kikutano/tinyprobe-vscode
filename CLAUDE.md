@@ -13,7 +13,7 @@ scripts/dev.sh package       # tinyprobe-vscode.vsix
 scripts/dev.sh install       # package + install in your VS Code
 ```
 
-Node 22 is in `~/.local/bin` on this machine. F5 in VS Code starts an Extension Development Host (`.vscode/launch.json`); set `tinyprobe.path` to `tinyprobe-dev` (from `scripts/dev.sh install` in the tinyprobe repository) to use the binary built from the sources.
+Needs Node 22 or newer on the PATH. F5 in VS Code starts an Extension Development Host (`.vscode/launch.json`); set `tinyprobe.path` to `tinyprobe-dev` (from `scripts/dev.sh install` in the tinyprobe repository) to use the binary built from the sources.
 
 ## Architecture
 
