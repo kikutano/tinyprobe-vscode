@@ -117,7 +117,10 @@ class WorkflowTests {
     await this.update(uri);
     const item = this.controller.items.get(uri.toString());
     if (!item) {
-      vscode.window.showWarningMessage('tinyprobe: this file is not a workflow (it has no steps).');
+      const document = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
+      vscode.window.showWarningMessage(document && protocol.isSequenceFile(document.getText())
+        ? 'tinyprobe: this file is a sequence: it runs with `use:` from a workflow, and Run to here on that line runs it.'
+        : 'tinyprobe: this file is not a workflow (it has no steps).');
       return;
     }
     const request = new vscode.TestRunRequest([item]);

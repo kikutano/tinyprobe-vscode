@@ -7,7 +7,8 @@ Explore endpoints and run [tinyprobe](https://github.com/kikutano/tinyprobe) API
 </p>
 
 - **Problems as you save.** tinyprobe files are validated when you open and save them: an unknown endpoint, a missing param or a misspelled key is underlined where it is, with the suggestion of tinyprobe (`did you mean 'get_user'?`).
-- **Completion and hover.** While you type, the keys you can write where the cursor is, with what they do; after `call:`, the endpoints of the workflow and of its imports (also while the workflow is not valid yet); in `with:`, the arguments of the called endpoint, required ones first. Hover on a key or on the endpoint of a `call` to see what it is. Needs tinyprobe 0.14.0 or newer.
+- **Completion and hover.** While you type, the keys you can write where the cursor is, with what they do; after `call:`, the endpoints of the workflow and of its imports (also while the workflow is not valid yet); in `with:`, the arguments of the called endpoint, required ones first, or the params of the sequence of a `use`. Hover on a key, on the endpoint of a `call` or on the sequence of a `use` to see what it is. Needs tinyprobe 0.14.0 or newer.
+- **Go to definition.** F12 (or Ctrl+click) on the endpoint of a `call` opens it in its API file; on a path (the sequence of a `use`, a file of `import`, the `file` of a `for_each` or of an upload) opens that file.
 - **Call an endpoint.** A **▶ Call** link sits above every endpoint of an API file. It asks for the required params, lets you pick optional ones, and shows the response, whatever its status. The last values are remembered for each endpoint.
 - **Run workflows.** **▶ Run workflow** at the top of a workflow, or the **Test Explorer**: each workflow is a test suite and each step a test, updated live as the run goes. A failed step shows why, at its line.
 - **Run to here.** **Run to here** on every step runs the workflow up to that step and shows its request and response: the step that needs the token and the ids of the steps before it, without running the rest. The steps before it run again each time, so nothing is kept between runs.
@@ -67,7 +68,7 @@ irm https://raw.githubusercontent.com/kikutano/tinyprobe/main/install.ps1 | iex
 
 ## How files are recognised
 
-A YAML file with a top-level `endpoints:` or `steps:` key is a tinyprobe file; one with `steps:` is a workflow. Environment files are found by name: `env.yaml`, `env.*.yaml`, `env-*.yaml`, `environment.yaml`. Other YAML files are left alone.
+A YAML file with a top-level `endpoints:`, `steps:` or `sequence:` key is a tinyprobe file; one with `steps:` is a workflow. A sequence (`sequence:`) is validated and completed like a workflow but has no Run link and no test of its own: it runs through the `use` steps of the workflows, and Run to here on a `use` line runs it. Environment files are found by name: `env.yaml`, `env.*.yaml`, `env-*.yaml`, `environment.yaml`. Other YAML files are left alone.
 
 A step cannot run on its own, since it uses the values saved by the steps before it: running a step from the Test Explorer runs its whole workflow.
 

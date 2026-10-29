@@ -299,3 +299,60 @@ test('the history keeps the newest entries first, up to its size', () => {
   assert.deepEqual(protocol.addToHistory([2, 1], 3, 2), [3, 2]);
   assert.deepEqual(protocol.addToHistory([], 1, 2), [1]);
 });
+
+test('sequence files are tinyprobe files, not workflows', () => {
+  const sequence = 'name: Log in\nparams:\n  password:\nsequence:\n  - call: login\n';
+  assert.equal(protocol.isTinyprobeFile(sequence), true);
+  assert.equal(protocol.isSequenceFile(sequence), true);
+  assert.equal(protocol.isWorkflowFile(sequence), false);
+  assert.equal(protocol.isSequenceFile('steps:\n  - call: a\n'), false);
+});
+
+const WITH_USE = [
+  'import:',                                   // 0
+  '  - ../api/shop.yaml',                      // 1
+  '  - billing: "../api/billing.yaml"',        // 2
+  'steps:',                                    // 3
+  '  - use: ../sequences/log-in.yaml   # login', // 4
+  '    with:',                                 // 5
+  '      ',                                    // 6
+  '  - call: billing.invoice',                 // 7
+  '    for_each: { file: ../data/cases.csv }', // 8
+  '    multipart:',                            // 9
+  '      avatar:',                             // 10
+  '        file: ../fixtures/a.png'            // 11
+];
+
+test('completion in the with of a use knows the sequence', () => {
+  const context = protocol.completionContext(WITH_USE, 6, 6);
+  assert.equal(context.kind, 'with');
+  assert.equal(context.use, '../sequences/log-in.yaml');
+  assert.equal(context.call, undefined);
+});
+
+test('go to definition: the endpoint of a call, and every path of a file', () => {
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 4, 14), { kind: 'file', file: '../sequences/log-in.yaml' });
+  assert.equal(protocol.definitionContext(WITH_USE, 4, 6), undefined, 'on the key');
+  assert.equal(protocol.definitionContext(WITH_USE, 4, 40), undefined, 'in the comment');
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 1, 8), { kind: 'file', file: '../api/shop.yaml' });
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 2, 20), { kind: 'file', file: '../api/billing.yaml' });
+  assert.equal(protocol.definitionContext(WITH_USE, 2, 6), undefined, 'on the import name');
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 7, 16), { kind: 'call', name: 'billing.invoice' });
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 8, 30), { kind: 'file', file: '../data/cases.csv' });
+  assert.deepEqual(protocol.definitionContext(WITH_USE, 11, 20), { kind: 'file', file: '../fixtures/a.png' });
+  assert.equal(protocol.definitionContext(WITH_USE, 3, 2), undefined);
+});
+
+test('hover on the path of a use', () => {
+  assert.deepEqual(protocol.hoverContext(WITH_USE, 4, 14), { kind: 'use', file: '../sequences/log-in.yaml' });
+  assert.equal(protocol.hoverContext(WITH_USE, 8, 30), undefined, 'only a use shows a sequence');
+});
+
+test('the params of a sequence to suggest, required first', () => {
+  const json = { params: [{ name: 'username', required: false, default: 'admin' }, { name: 'password', required: true, default: null }] };
+  assert.deepEqual(protocol.sequenceInputs(json), [
+    { name: 'password', detail: 'required param' },
+    { name: 'username', detail: 'param, default "admin"' }
+  ]);
+  assert.deepEqual(protocol.sequenceInputs(undefined), []);
+});

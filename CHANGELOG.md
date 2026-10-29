@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Sequence files** (`sequence:`, tinyprobe 0.18) are recognised: validated on save, with completion and hover. They get no Run link and no Test Explorer entry, since they run through a `use`; Run Workflow on one says so.
+- In the `with` of a `use`, completion offers the params of the sequence, required first; hover on a `use` shows the sequence's name, description and params.
+- **Go to definition** (F12, Ctrl+click): on the endpoint of a `call`, its line in the API file; on the path of a `use`, of an `import` or of a `file` (`for_each`, uploads), that file.
+
 ## 0.7.0
 
 - **History view**, in the new tinyprobe sidebar: the last 50 calls made with ▶ Call, newest first, with their status, duration and time. A click shows the request and response again in the run view; **Send Again** repeats a call with the same arguments and the environment selected now; **Open Endpoint** goes to its API file. The history is kept per workspace in VS Code's storage, bodies cut at 64 KiB; **Clear History** empties it.
