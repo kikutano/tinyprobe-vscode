@@ -2,12 +2,14 @@
 
 const vscode = require('vscode');
 const path = require('node:path');
+const fs = require('node:fs');
 const protocol = require('./protocol');
 
 /**
- * Completion and hover in tinyprobe files: keys and their descriptions from `tinyprobe schema`, endpoint
- * names and arguments from the last inspection of the file (`inspect --json`, also for an invalid workflow).
- * Nothing runs the binary while typing.
+ * Completion, hover and "go to definition" in tinyprobe files: keys and their descriptions from
+ * `tinyprobe schema`, endpoint names and arguments from the last inspection of the file (`inspect --json`,
+ * also for an invalid workflow), a sequence's params from its own inspection. The binary runs while typing
+ * only to inspect a sequence that has not been inspected yet, once.
  */
 class TinyprobeEditing {
   /**
@@ -29,6 +31,18 @@ class TinyprobeEditing {
     return this.inspector.get(document.uri.fsPath)?.endpoints ?? [];
   }
 
+  /** A path written in a file (`use`, `import`, `file`) is relative to that file, as tinyprobe reads it. */
+  resolve(document, file) {
+    return path.resolve(path.dirname(document.uri.fsPath), file);
+  }
+
+  /** The inspection of the sequence a `use` names, or undefined when the file is not there (yet). */
+  async sequence(document, file) {
+    const resolved = this.resolve(document, file);
+    if (!fs.existsSync(resolved)) return undefined;
+    return this.inspector.get(resolved) ?? await this.inspector.inspect(vscode.Uri.file(resolved));
+  }
+
   async provideCompletionItems(document, position) {
     if (!this.isTinyprobe(document)) return undefined;
     const lines = document.getText().split(/\r?\n/);
@@ -42,6 +56,19 @@ class TinyprobeEditing {
         const item = new vscode.CompletionItem(endpoint.name, vscode.CompletionItemKind.Function);
         item.detail = `${endpoint.method} ${endpoint.path}`;
         item.documentation = endpointMarkdown(endpoint);
+        item.range = range;
+        return item;
+      });
+    }
+
+    if (context.kind === 'with' && context.use) {
+      const json = await this.sequence(document, context.use);
+      if (json?.kind !== 'sequence') return undefined;
+      return protocol.sequenceInputs(json).filter(input => !context.existing.has(input.name)).map((input, index) => {
+        const item = new vscode.CompletionItem(input.name, vscode.CompletionItemKind.Variable);
+        item.detail = input.detail;
+        item.insertText = `${input.name}: `;
+        item.sortText = String(index).padStart(3, '0');
         item.range = range;
         return item;
       });
@@ -84,11 +111,42 @@ class TinyprobeEditing {
       const endpoint = this.endpoints(document).find(e => e.name === context.name);
       return endpoint ? new vscode.Hover(endpointMarkdown(endpoint)) : undefined;
     }
+    if (context.kind === 'use') {
+      const json = await this.sequence(document, context.file);
+      return json?.kind === 'sequence' ? new vscode.Hover(sequenceMarkdown(json)) : undefined;
+    }
 
     const schema = await this.tinyprobe.schema();
     const key = schema && protocol.schemaKeys(schema, context.path).find(k => k.name === context.key);
     return key ? new vscode.Hover(new vscode.MarkdownString(`**${key.name}**: ${key.description}`)) : undefined;
   }
+
+  /** The file of a `use`, `import` or `file`, or the endpoint of a `call`, as a location to open. */
+  provideDefinition(document, position) {
+    if (!this.isTinyprobe(document)) return undefined;
+    const context = protocol.definitionContext(document.getText().split(/\r?\n/), position.line, position.character);
+    if (!context) return undefined;
+
+    if (context.kind === 'file') {
+      const resolved = this.resolve(document, context.file);
+      return fs.existsSync(resolved) ? new vscode.Location(vscode.Uri.file(resolved), new vscode.Position(0, 0)) : undefined;
+    }
+    const endpoint = this.endpoints(document).find(e => e.name === context.name);
+    if (!endpoint?.location) return undefined;
+    const { line, character } = protocol.toPosition(endpoint.location);
+    const file = protocol.resolveFile(this.tinyprobe.cwdFor(document.uri), endpoint.location.file);
+    return new vscode.Location(vscode.Uri.file(file), new vscode.Position(line, character));
+  }
+}
+
+/** A sequence as people read it: its name and description, the params a `use` passes. */
+function sequenceMarkdown(json) {
+  const markdown = new vscode.MarkdownString();
+  markdown.appendMarkdown(`**${json.name ?? path.basename(json.file)}** (sequence, ${json.steps?.length ?? 0} steps)`);
+  if (json.description) markdown.appendMarkdown(`\n\n${json.description}`);
+  const params = (json.params ?? []).map(p => p.required ? `\`${p.name}\` (required)` : `\`${p.name}\` = \`${JSON.stringify(p.default)}\``);
+  if (params.length > 0) markdown.appendMarkdown(`\n\nParams: ${params.join(', ')}`);
+  return markdown;
 }
 
 /** An endpoint as people read it: method and path, its params, and where it is defined. */

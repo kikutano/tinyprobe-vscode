@@ -331,6 +331,57 @@ async function run() {
     assert.match(onCall.map(h => h.contents.map(c => c.value ?? c).join('')).join(''), /GET \/api\/users\/\$\{id\}/);
   });
 
+  const sequence = file('sequences/log-in.yaml');
+  const using = file('workflows/using.yaml');
+  fs.writeFileSync(using.fsPath, [
+    'import:',
+    '  - ../api/testserver.yaml',
+    '  - probe: ../api/probe.yaml',
+    'steps:',
+    '  - use: ../sequences/log-in.yaml',
+    '    with:',
+    '      ',
+    '  - call: probe.health',
+    ''
+  ].join('\n'));
+
+  await check('a sequence file is validated, with no Run lens and no test of its own', async () => {
+    await vscode.window.showTextDocument(sequence);
+    const json = await waitFor(() => tinyprobe.inspector.get(sequence.fsPath), 'the inspection of the sequence');
+    assert.equal(json.kind, 'sequence');
+    assert.deepEqual(vscode.languages.getDiagnostics(sequence), []);
+    const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', sequence);
+    assert.deepEqual(lenses.map(l => l.command?.command), []);
+    await tinyprobe.tests.update(sequence);
+    assert.equal(tinyprobe.tests.controller.items.get(sequence.toString()), undefined);
+  });
+
+  await vscode.window.showTextDocument(using);
+  await waitFor(() => tinyprobe.inspector.get(using.fsPath)?.endpoints?.length > 0, 'the endpoints of the workflow with a use');
+
+  await check('completion in the with of a use offers the params of the sequence, required first', async () => {
+    const params = await completions(using, 6, 6, vscode.CompletionItemKind.Variable);
+    const sorted = params.sort((a, b) => a.sortText.localeCompare(b.sortText));
+    assert.deepEqual(sorted.map(labelOf), ['password', 'username']);
+    assert.equal(sorted[0].detail, 'required param');
+    assert.equal(sorted[1].detail, 'param, default "admin"');
+  });
+
+  await check('hover on a use shows the sequence and its params', async () => {
+    const hover = await vscode.commands.executeCommand('vscode.executeHoverProvider', using, new vscode.Position(4, 14));
+    const text = hover.map(h => h.contents.map(c => c.value ?? c).join('')).join('');
+    assert.match(text, /\*\*Log in\*\* \(sequence, 1 steps\)/);
+    assert.match(text, /`password` \(required\)/);
+  });
+
+  await check('go to definition opens the sequence of a use, an imported file and the endpoint of a call', async () => {
+    const at = async (line, character) => (await vscode.commands.executeCommand('vscode.executeDefinitionProvider', using, new vscode.Position(line, character)))
+      .map(l => [path.relative(root, (l.uri ?? l.targetUri).fsPath), (l.range ?? l.targetRange).start.line]);
+    assert.deepEqual(await at(4, 14), [[path.join('sequences', 'log-in.yaml'), 0]]);
+    assert.deepEqual(await at(2, 16), [[path.join('api', 'probe.yaml'), 0]]);
+    assert.deepEqual(await at(7, 14), [[path.join('api', 'probe.yaml'), 10]]);
+  });
+
   const report = results.join('\n');
   fs.writeFileSync(path.join(root, 'integration-results.txt'), report);
   if (results.some(r => r.startsWith('FAIL'))) throw new Error(`Integration tests failed:\n${report}`);

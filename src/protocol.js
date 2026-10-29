@@ -50,9 +50,14 @@ class LineSplitter {
   }
 }
 
-/** A tinyprobe file defines endpoints or steps at the top level; other YAML files are left alone. */
+/** A tinyprobe file defines endpoints, steps or a sequence at the top level; other YAML files are left alone. */
 function isTinyprobeFile(text) {
-  return /^(endpoints|steps)[ \t]*:/m.test(text);
+  return /^(endpoints|steps|sequence)[ \t]*:/m.test(text);
+}
+
+/** A sequence has its steps under `sequence:`: it runs only through a `use` step, never on its own. */
+function isSequenceFile(text) {
+  return /^sequence[ \t]*:/m.test(text);
 }
 
 /** A workflow has steps; an API file has only endpoints. */
@@ -326,14 +331,14 @@ function completionContext(lines, row, character) {
   const last = path[path.length - 1];
   const step = path[path.length - 2];
   if (last === 'with' && typeof step === 'object') {
-    return { kind: 'with', call: itemValue(lines, step, 'call'), partial: key[3], existing: siblingKeys(lines, row, col) };
+    return { kind: 'with', call: itemValue(lines, step, 'call'), use: itemValue(lines, step, 'use'), partial: key[3], existing: siblingKeys(lines, row, col) };
   }
   return { kind: 'key', path, partial: key[3], existing: key[2] ? new Set() : siblingKeys(lines, row, col) };
 }
 
 /**
  * What is under the cursor, for hover: `{ kind: 'key', path, key }` on a key, `{ kind: 'call', name }` on the
- * endpoint name after `call:`; undefined elsewhere.
+ * endpoint name after `call:`, `{ kind: 'use', file }` on the path of a `use`; undefined elsewhere.
  */
 function hoverContext(lines, row, character) {
   const line = parseYamlLine(lines[row]);
@@ -345,7 +350,48 @@ function hoverContext(lines, row, character) {
     return { kind: 'key', path, key: line.key };
   }
   if (line.key === 'call' && character > keyEnd && line.value !== '') return { kind: 'call', name: line.value.replace(/\s+#.*$/, '') };
+  const target = definitionContext(lines, row, character);
+  if (target?.kind === 'file' && line.key === 'use') return { kind: 'use', file: target.file };
   return undefined;
+}
+
+/**
+ * What "go to definition" opens at a position: `{ kind: 'call', name }` on the endpoint of a `call`, or
+ * `{ kind: 'file', file }` on a path: the sequence of a `use`, a file of `import`, the `file` of a `for_each`
+ * or of a multipart field. `file` is as written, relative to the file it is in.
+ */
+function definitionContext(lines, row, character) {
+  const text = lines[row];
+  const line = parseYamlLine(text);
+  if (!line) return undefined;
+
+  const call = /^(\s*(?:- +)?call:\s*)([\w.-]+)/.exec(text);
+  if (call) return within(character, call[1].length, call[0].length) ? { kind: 'call', name: call[2] } : undefined;
+
+  // `use: path`, `file: path` (also inside `{ file: path }`), and the items of `import` (`- path`, `- name: path`).
+  for (const match of text.matchAll(/(?:^|[\s{,])(use|file):\s*(["']?)([^\s"',}#]+)\2/g)) {
+    const start = match.index + match[0].length - match[3].length - match[2].length;
+    if (within(character, start, start + match[3].length)) return { kind: 'file', file: match[3] };
+  }
+  if (line.dash && yamlPath(lines, row, line.indent).join('/') === 'import') {
+    const item = /^(\s*- +(?:[\w.-]+:\s*)?)(["']?)([^\s"'#]+)\2/.exec(text);
+    if (item && within(character, item[1].length + item[2].length, item[1].length + item[2].length + item[3].length)) {
+      return { kind: 'file', file: item[3] };
+    }
+  }
+  return undefined;
+}
+
+function within(character, start, end) {
+  return character >= start && character <= end;
+}
+
+/** The params of a sequence (from `inspect --json`) to suggest in the `with` of a `use`, required first. */
+function sequenceInputs(json) {
+  return (json?.params ?? [])
+    .map((param, order) => ({ param, order }))
+    .sort((a, b) => Number(b.param.required) - Number(a.param.required) || a.order - b.order)
+    .map(({ param }) => ({ name: param.name, detail: param.required ? 'required param' : `param, default ${JSON.stringify(param.default)}` }));
 }
 
 function resolveSchema(root, schema) {
@@ -426,6 +472,7 @@ module.exports = {
   SCHEMA_VERSION,
   LineSplitter,
   isTinyprobeFile,
+  isSequenceFile,
   isWorkflowFile,
   isEnvironmentFileName,
   runArgs,
@@ -448,6 +495,8 @@ module.exports = {
   itemValue,
   completionContext,
   hoverContext,
+  definitionContext,
+  sequenceInputs,
   schemaKeys,
   withSuggestions,
   endpointInputs,

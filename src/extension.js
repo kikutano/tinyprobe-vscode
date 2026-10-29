@@ -53,6 +53,7 @@ function activate(context) {
     vscode.languages.registerCodeLensProvider(YAML, lenses),
     vscode.languages.registerCompletionItemProvider(YAML, editing, ' ', ':'),
     vscode.languages.registerHoverProvider(YAML, editing),
+    vscode.languages.registerDefinitionProvider(YAML, editing),
 
     vscode.workspace.onDidOpenTextDocument(validate),
     vscode.workspace.onDidSaveTextDocument(async document => {
