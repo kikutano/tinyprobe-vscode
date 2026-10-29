@@ -48,6 +48,7 @@ body {
 .step:hover { background: var(--hover); }
 .step.selected { background: var(--selected); color: var(--selected-fg); }
 .step:focus-visible { outline: 1px solid var(--vscode-focusBorder, var(--info)); outline-offset: -1px; }
+.step-item { padding-left: 26px; font-size: 0.95em; }
 .step-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .step-passed .icon { color: var(--passed); }
 .step-failed .icon, .step-failed .step-name { color: var(--failed); }

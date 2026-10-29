@@ -143,6 +143,31 @@ function failureLines(step) {
   return lines;
 }
 
+/** The name of a `for_each` step without the `[2/3]` of the item it is running. */
+function stepBaseName(name) {
+  return String(name ?? '').replace(/ \[\d+\/\d+\]$/, '');
+}
+
+/** How one item of a `for_each` step is named in the Test Explorer and the run view: `item 2 of 3`. */
+function iterationLabel(iteration, total) {
+  return `item ${iteration.iteration} of ${total}`;
+}
+
+/**
+ * Why a `for_each` step failed: each failed item, with its reasons. The event's own fields are those of the
+ * first failed item only; a step without items gets the lines of `failureLines`.
+ */
+function forEachFailureLines(step) {
+  if (!Array.isArray(step.iterations) || step.iterations.length === 0) return failureLines(step);
+  const total = step.iterations.length;
+  const failed = step.iterations.filter(i => !i.success);
+  if (failed.length === 0) return failureLines(step);
+  return [
+    `${failed.length} of ${total} items failed`,
+    ...failed.flatMap(i => failureLines(i).map(line => `${iterationLabel(i, total)}: ${line}`))
+  ];
+}
+
 /** The name of the variable a step failed on ("Variable 'x' is not defined."), or undefined. */
 function undefinedVariable(event) {
   if (event?.event !== 'step_completed' || event.success || !event.failure) return undefined;
@@ -482,6 +507,9 @@ module.exports = {
   toPosition,
   problemsByFile,
   failureLines,
+  stepBaseName,
+  iterationLabel,
+  forEachFailureLines,
   undefinedVariable,
   compareVersions,
   isSupportedVersion,

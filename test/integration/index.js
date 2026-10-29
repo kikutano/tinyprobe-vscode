@@ -130,6 +130,22 @@ async function run() {
     assert.ok(events.filter(e => e.event === 'step_completed').every(e => e.request && e.response));
   });
 
+  await check('the items of a for_each step become its children in the Test Explorer, with the run view showing them', async () => {
+    const tables = file('workflows/tables.yaml');
+    await tinyprobe.tests.runFile(tables);
+    const workflow = tinyprobe.tests.controller.items.get(tables.toString());
+    const first = workflow.children.get(`${workflow.id}#0`);
+    const labels = [];
+    first.children.forEach(child => labels.push([child.id, child.label]));
+    assert.deepEqual(labels, [
+      [`${first.id}/1`, 'item 1 of 3'],
+      [`${first.id}/2`, 'item 2 of 3'],
+      [`${first.id}/3`, 'item 3 of 3']
+    ]);
+    const completed = tinyprobe.runView.events.find(e => e.event === 'step_completed' && e.index === 0);
+    assert.deepEqual(completed.iterations.map(i => i.status), [200, 404, 503]);
+  });
+
   await check('a call shows the response, whatever the status', async () => {
     await tinyprobe.caller.send(api, 'status', [['code', '404']]);
     const completed = tinyprobe.runView.events.find(e => e.event === 'step_completed');

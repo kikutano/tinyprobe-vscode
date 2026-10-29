@@ -5,6 +5,7 @@
 - **Sequence files** (`sequence:`, tinyprobe 0.18) are recognised: validated on save, with completion and hover. They get no Run link and no Test Explorer entry, since they run through a `use`; Run Workflow on one says so.
 - In the `with` of a `use`, completion offers the params of the sequence, required first; hover on a `use` shows the sequence's name, description and params.
 - **Go to definition** (F12, Ctrl+click): on the endpoint of a `call`, its line in the API file; on the path of a `use`, of an `import` or of a `file` (`for_each`, uploads), that file.
+- **`for_each` items**: the run view shows a row for each item of a `for_each` step (status, duration), with its own request, response and checks, and the step shows how many passed; a failed step opens on its first failed item. In the Test Explorer the items become children of their step, each passed or failed, and the step's message lists every failed item.
 
 ## 0.7.0
 

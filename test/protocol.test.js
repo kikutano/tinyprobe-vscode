@@ -356,3 +356,26 @@ test('the params of a sequence to suggest, required first', () => {
   ]);
   assert.deepEqual(protocol.sequenceInputs(undefined), []);
 });
+
+test('the items of a for_each step: their label, and why the step failed', () => {
+  assert.equal(protocol.stepBaseName('Simulated status codes [2/3]'), 'Simulated status codes');
+  assert.equal(protocol.stepBaseName('Users [a]'), 'Users [a]');
+  assert.equal(protocol.iterationLabel({ iteration: 2 }, 3), 'item 2 of 3');
+
+  const passed = { success: true, failure: null, assertions: [] };
+  const step = {
+    success: false, failure: null, assertions: [{ subject: 'status', condition: 'eq 404', actual: '200', passed: false }],
+    iterations: [
+      { iteration: 1, ...passed },
+      { iteration: 2, success: false, failure: null, assertions: [{ subject: 'status', condition: 'eq 404', actual: '200', passed: false }] },
+      { iteration: 3, success: false, failure: 'Connection refused', assertions: [] }
+    ]
+  };
+  assert.deepEqual(protocol.forEachFailureLines(step), [
+    '2 of 3 items failed',
+    'item 2 of 3: status eq 404, actual 200',
+    'item 3 of 3: Connection refused'
+  ]);
+  assert.deepEqual(protocol.forEachFailureLines({ success: false, failure: 'x', assertions: [], iterations: null }), ['x']);
+  assert.deepEqual(protocol.forEachFailureLines({ success: false, failure: 'x', assertions: [], iterations: [] }), ['x']);
+});
