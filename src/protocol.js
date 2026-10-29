@@ -383,7 +383,8 @@ function hoverContext(lines, row, character) {
 /**
  * What "go to definition" opens at a position: `{ kind: 'call', name }` on the endpoint of a `call`, or
  * `{ kind: 'file', file }` on a path: the sequence of a `use`, a file of `import`, the `file` of a `for_each`
- * or of a multipart field. `file` is as written, relative to the file it is in.
+ * or of a multipart field, the schema file of a `schema` check (without its `#/pointer`). `file` is as written,
+ * relative to the file it is in.
  */
 function definitionContext(lines, row, character) {
   const text = lines[row];
@@ -393,8 +394,9 @@ function definitionContext(lines, row, character) {
   const call = /^(\s*(?:- +)?call:\s*)([\w.-]+)/.exec(text);
   if (call) return within(character, call[1].length, call[0].length) ? { kind: 'call', name: call[2] } : undefined;
 
-  // `use: path`, `file: path` (also inside `{ file: path }`), and the items of `import` (`- path`, `- name: path`).
-  for (const match of text.matchAll(/(?:^|[\s{,])(use|file):\s*(["']?)([^\s"',}#]+)\2/g)) {
+  // `use: path`, `file: path` (also inside `{ file: path }`), `schema: path#/pointer` (a schema written in
+  // place, `{ type: string }`, is not a path), and the items of `import` (`- path`, `- name: path`).
+  for (const match of text.matchAll(/(?:^|[\s{,])(use|file|schema):\s*(["']?)([^\s"',{}[\]#][^\s"',}#]*)\2/g)) {
     const start = match.index + match[0].length - match[3].length - match[2].length;
     if (within(character, start, start + match[3].length)) return { kind: 'file', file: match[3] };
   }

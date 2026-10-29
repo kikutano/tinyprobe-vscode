@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Go to definition on the file of a `schema` check (tinyprobe 0.20): `$: { schema: ../openapi.yaml#/components/schemas/User }` opens `openapi.yaml`. Completion and hover of `schema` and `matches` come from `tinyprobe schema`, with no change.
+
 ## 0.8.0
 
 - **Sequence files** (`sequence:`, tinyprobe 0.18) are recognised: validated on save, with completion and hover. They get no Run link and no Test Explorer entry, since they run through a `use`; Run Workflow on one says so.
