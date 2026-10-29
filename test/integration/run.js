@@ -72,11 +72,28 @@ function findVsCode() {
     console.error('VS Code not found: set VSCODE_PATH to its executable.');
     process.exit(2);
   }
-  const install = path.resolve(path.dirname(fs.realpathSync(launcher)), '..');
+  const real = fs.realpathSync(launcher);
+  const install = path.resolve(path.dirname(real), '..');
   const candidates = process.platform === 'win32'
     ? [path.join(install, 'Code.exe')]
     : process.platform === 'darwin'
       ? [path.resolve(install, '..', 'MacOS', 'Electron'), path.resolve(install, '..', 'MacOS', 'Code')]
-      : [path.join(install, 'code'), path.resolve(install, '..', 'code')];
+      : [path.join(install, 'code'), path.resolve(install, '..', 'code'), ...wrappedInstall(real)];
   return candidates.find(fs.existsSync) ?? launcher;
+}
+
+/**
+ * Some Linux packages (Arch) install `code` as a script that runs `<install>/bin/code`
+ * from elsewhere, e.g. /usr/share/code: the executable is found from the path in the script.
+ */
+function wrappedInstall(launcher) {
+  let script;
+  try {
+    script = fs.readFileSync(launcher, 'utf8');
+  } catch {
+    return [];
+  }
+  if (!script.startsWith('#!')) return [];
+  const match = /(\/\S+)\/bin\/code\b/.exec(script);
+  return match ? [path.join(match[1], 'code')] : [];
 }
