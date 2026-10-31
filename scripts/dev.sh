@@ -10,11 +10,15 @@
 #   check         test + integration: run it before opening a pull request.
 #   package       Build tinyprobe-vscode.vsix.
 #   install       Package and install the .vsix in your VS Code.
+#   sync-shared   Copy the run view shared with tinyprobe-app (web/shared/) into media/shared/,
+#                 from ../tinyprobe-app, and record its version in media/shared/VERSION.
+#   check-shared  Check that media/shared/ is the copy of the tinyprobe-app version it names (CI).
 #
 # Environment variables:
 #   TINYPROBE_REPO   the tinyprobe repository (default: the folder next to this one that contains Tinyprobe.slnx)
 #   TINYPROBE_PATH   the tinyprobe binary (default: the development build of TINYPROBE_REPO)
 #   TINYPROBE_PORT   port of the test server (default: 5122)
+#   TINYPROBE_APP_REPO  tinyprobe-app, for sync-shared (default: the folder next to this one)
 set -eu
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -84,6 +88,27 @@ integration() {
   TINYPROBE_PATH="$binary" TINYPROBE_EXAMPLES="$repo/docs" node test/integration/run.js
 }
 
+# The run view is shared with tinyprobe-app, which keeps the canonical copy (tinyprobe spec 0017).
+SHARED_FILES="run-view.js run-view.css"
+
+sync_shared() {
+  app="${TINYPROBE_APP_REPO:-$ROOT/../tinyprobe-app}"
+  [ -d "$app/web/shared" ] || fail "tinyprobe-app was not found in $app: set TINYPROBE_APP_REPO."
+  for file in $SHARED_FILES; do cp "$app/web/shared/$file" "$ROOT/media/shared/$file"; done
+  sed -n 's/.*<VersionPrefix>\(.*\)<\/VersionPrefix>.*/\1/p' "$app/launcher/Tinyprobe.App.csproj" > "$ROOT/media/shared/VERSION"
+  step "media/shared/ is now the run view of tinyprobe-app $(cat "$ROOT/media/shared/VERSION")"
+}
+
+check_shared() {
+  version=$(cat "$ROOT/media/shared/VERSION")
+  step "media/shared/ against tinyprobe-app $version"
+  for file in $SHARED_FILES; do
+    curl -fsSL "https://raw.githubusercontent.com/kikutano/tinyprobe-app/v$version/web/shared/$file" \
+      | cmp -s - "$ROOT/media/shared/$file" \
+      || fail "media/shared/$file is not the one of tinyprobe-app v$version: change it there, then scripts/dev.sh sync-shared."
+  done
+}
+
 package() {
   step "Package"
   cd "$ROOT" && npm run package --silent
@@ -96,6 +121,8 @@ case "${1:-}" in
   check) unit_tests && integration && step "All checks passed" ;;
   package) package ;;
   install) package && code --install-extension "$(ls -1t "$ROOT"/*.vsix | head -1)" --force ;;
-  ""|-h|--help|help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//' ;;
+  sync-shared) sync_shared ;;
+  check-shared) check_shared ;;
+  ""|-h|--help|help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) fail "unknown command '$1'. See scripts/dev.sh --help." ;;
 esac

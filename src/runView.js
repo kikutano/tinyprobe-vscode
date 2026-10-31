@@ -76,20 +76,21 @@ class RunView {
 
   html(webview, media) {
     const nonce = crypto.randomBytes(16).toString('base64');
-    const script = webview.asWebviewUri(vscode.Uri.joinPath(media, 'run-view.js'));
-    const style = webview.asWebviewUri(vscode.Uri.joinPath(media, 'run-view.css'));
+    const uri = (...parts) => webview.asWebviewUri(vscode.Uri.joinPath(media, ...parts));
     return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="${style}">
+  <link rel="stylesheet" href="${uri('run-view-host.css')}">
+  <link rel="stylesheet" href="${uri('shared', 'run-view.css')}">
   <title>tinyprobe</title>
 </head>
 <body>
   <div id="app"></div>
-  <script nonce="${nonce}" src="${script}"></script>
+  <script nonce="${nonce}" src="${uri('shared', 'run-view.js')}"></script>
+  <script nonce="${nonce}" src="${uri('run-view-host.js')}"></script>
 </body>
 </html>`;
   }

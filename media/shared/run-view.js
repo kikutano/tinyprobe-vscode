@@ -1,6 +1,6 @@
-// The run view: renders the NDJSON events of `tinyprobe run` / `tinyprobe call` (docs/protocol.md).
-// Plain browser JavaScript with no VS Code API except the bootstrap at the end, so the same
-// file can serve a browser UI. Every value from the run is set with textContent, never as HTML.
+// The run view: renders the NDJSON events of `tinyprobe run` / `tinyprobe call` (tinyprobe docs/protocol.md).
+// Shared by tinyprobe-app and the VS Code extension, which copies this file: plain browser JavaScript with no
+// host API, so each one adds its own bootstrap. Every value from the run is set with textContent, never as HTML.
 (function () {
   'use strict';
 
@@ -315,16 +315,5 @@
     return { reset, apply, error };
   }
 
-  // --- Bootstrap -----------------------------------------------------------
-
-  const view = createRunView(document.getElementById('app'));
-  window.tinyprobeRunView = view;
-
-  window.addEventListener('message', ({ data }) => {
-    if (data.type === 'reset') view.reset(data.title, data.environment);
-    else if (data.type === 'event') view.apply(data.event);
-    else if (data.type === 'error') view.error(data.message);
-  });
-
-  if (typeof acquireVsCodeApi === 'function') acquireVsCodeApi().postMessage({ type: 'ready' });
+  globalThis.tinyprobeRunView = { create: createRunView, formatDuration, statusClass };
 })();
