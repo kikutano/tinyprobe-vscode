@@ -89,14 +89,14 @@ integration() {
 }
 
 # The run view is shared with tinyprobe-app, which keeps the canonical copy (tinyprobe spec 0017).
-SHARED_FILES="run-view.js run-view.css"
+SHARED_FILES="run-view.js run-view.css environment-file.js history.js"
 
 sync_shared() {
   app="${TINYPROBE_APP_REPO:-$ROOT/../tinyprobe-app}"
   [ -d "$app/web/shared" ] || fail "tinyprobe-app was not found in $app: set TINYPROBE_APP_REPO."
   for file in $SHARED_FILES; do cp "$app/web/shared/$file" "$ROOT/media/shared/$file"; done
   sed -n 's/.*<VersionPrefix>\(.*\)<\/VersionPrefix>.*/\1/p' "$app/launcher/Tinyprobe.App.csproj" > "$ROOT/media/shared/VERSION"
-  step "media/shared/ is now the run view of tinyprobe-app $(cat "$ROOT/media/shared/VERSION")"
+  step "media/shared/ is now the shared code of tinyprobe-app $(cat "$ROOT/media/shared/VERSION")"
 }
 
 check_shared() {

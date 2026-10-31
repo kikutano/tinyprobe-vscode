@@ -28,7 +28,7 @@ Plain JavaScript (CommonJS), no dependency, no build step.
 - `src/mcp.js`: registers `tinyprobe mcp` with VS Code (`vscode.lm.registerMcpServerDefinitionProvider`), only when the binary has it (`protocol.supportsMcp`).
 - `src/history.js` (History view: calls recorded by `call.js`, kept as JSON in the extension's `storageUri`; the entry itself is built by `protocol.historyEntry`).
 - `src/environmentFile.js` (no VS Code API: the variables of an environment file and text edits of one variable, comments kept; a text editor's view of the file, the values are still read by the binary) and `src/environmentView.js` (Environment view, edits through a `WorkspaceEdit` so Undo works).
-- `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view-host.js` (webview). The view itself is `media/shared/`, a copy of tinyprobe-app's `web/shared/`: change it there, then `scripts/dev.sh sync-shared`; CI (`check-shared`) fails when the copy differs from the tinyprobe-app version in `media/shared/VERSION`.
+- `src/codelens.js`, `src/call.js` (▶ Call: prompts for args), `src/testing.js` (Test Explorer, live ndjson), `src/runView.js` + `media/run-view-host.js` (webview). The view itself, the editing of environment files (`src/environmentFile.js`) and the history logic (`src/protocol.js`) come from `media/shared/`, a copy of tinyprobe-app's `web/shared/`: change it there, then `scripts/dev.sh sync-shared`; CI (`check-shared`) fails when the copy differs from the tinyprobe-app version in `media/shared/VERSION`.
 - `test/*.test.js` unit tests; `test/integration/` runs in VS Code against `docs/example` of the tinyprobe repo.
 
 ## Roadmap
