@@ -1,0 +1,30 @@
+/* The run view in VS Code: the theme's colors and fonts as the tokens of media/shared/run-view.css,
+   with fallbacks so the page also works in a plain browser. */
+:root {
+  --fg: var(--vscode-foreground, #1f2328);
+  --bg: var(--vscode-editor-background, #ffffff);
+  --muted: var(--vscode-descriptionForeground, #6e7781);
+  --border: var(--vscode-panel-border, #d0d7de);
+  --hover: var(--vscode-list-hoverBackground, #f3f4f6);
+  --selected: var(--vscode-list-activeSelectionBackground, #dbeafe);
+  --selected-fg: var(--vscode-list-activeSelectionForeground, inherit);
+  --code-bg: var(--vscode-textCodeBlock-background, #f6f8fa);
+  --passed: var(--vscode-testing-iconPassed, #1a7f37);
+  --failed: var(--vscode-testing-iconFailed, #cf222e);
+  --running: var(--vscode-charts-orange, #d97706);
+  --info: var(--vscode-charts-blue, #0969da);
+  --mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Consolas, monospace);
+  --focus: var(--vscode-focusBorder, #0969da);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--fg);
+  background: var(--bg);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+}
+

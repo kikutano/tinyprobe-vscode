@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The run view is now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same rendering of steps, checks, requests and responses in both. Nothing changes in VS Code.
+
 ## 0.9.0
 
 - Go to definition on the file of a `schema` check (tinyprobe 0.20): `$: { schema: ../openapi.yaml#/components/schemas/User }` opens `openapi.yaml`. Completion and hover of `schema` and `matches` come from `tinyprobe schema`, with no change.

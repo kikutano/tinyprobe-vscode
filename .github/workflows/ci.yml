@@ -24,6 +24,14 @@ jobs:
           node-version: '22'
       - run: npm test
 
+  # The run view is the copy of tinyprobe-app's web/shared/ at the version media/shared/VERSION names.
+  shared:
+    name: Shared run view
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/dev.sh check-shared
+
   # The extension in a real VS Code, with the latest tinyprobe release, against the tinyprobe test
   # server of the same version (its examples are the test workspace).
   integration:
