@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The run view is now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same rendering of steps, checks, requests and responses in both. Nothing changes in VS Code.
+- The run view, the editing of environment files and the request history are now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same code in both. Nothing changes in VS Code.
 
 ## 0.9.0
 
