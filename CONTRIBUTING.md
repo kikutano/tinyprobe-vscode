@@ -39,4 +39,4 @@ One topic per pull request, on a branch such as `feature/…` or `fix/…`, with
 
 ## License
 
-By contributing you agree that your contributions are licensed under the [MIT License](LICENSE).
+By contributing you agree that your contributions are licensed under the [GNU General Public License, version 3](LICENSE) (GPL-3.0-only), like the rest of the project.

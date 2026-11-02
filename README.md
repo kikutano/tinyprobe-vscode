@@ -97,4 +97,8 @@ No dependency to install: the extension is plain JavaScript on the VS Code API.
 
 ## License
 
-[MIT](LICENSE)
+Copyright (C) 2026 Gaetano Lenoci
+
+The tinyprobe extension is free software: you can use, change and share it under the terms of the [GNU General Public License, version 3](LICENSE) (GPL-3.0-only). A changed version may be shared, even for a fee, only under the same license and together with its source code.
+
+Releases up to 0.9.0 were published under the MIT License, which still applies to them.
