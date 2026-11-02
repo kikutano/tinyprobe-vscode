@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- The run view, the editing of environment files and the request history are now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same code in both. Nothing changes in VS Code.
+- The run view, the editing of environment files and the request history are now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same code in both.
+- **A request is not a test**: ▶ Call, and a call of the History, show the HTTP status of the response (`401 Unauthorized` in orange, `200 OK` in green, 5xx and no response in red) instead of `PASSED`, and no longer show "1/1 steps passed · 0 checks": just the request and the response.
+- **Request, then response**: a step's detail shows what was sent before what came back, and the values it saved are folded under their names (`Saved  token, userId`), opened with a click.
 
 ## 0.9.0
 

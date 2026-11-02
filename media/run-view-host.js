@@ -6,7 +6,7 @@
   const view = globalThis.tinyprobeRunView.create(document.getElementById('app'));
 
   window.addEventListener('message', ({ data }) => {
-    if (data.type === 'reset') view.reset(data.title, data.environment);
+    if (data.type === 'reset') view.reset(data.title, data.environment, { call: Boolean(data.call) });
     else if (data.type === 'event') view.apply(data.event);
     else if (data.type === 'error') view.error(data.message);
   });

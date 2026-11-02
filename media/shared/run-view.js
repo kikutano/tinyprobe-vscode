@@ -56,8 +56,12 @@
     let state;
     let selected = null;
 
-    function reset(title, environment) {
-      state = { title, environment, steps: [], started: false, finished: null, invalid: null, error: null, to: null };
+    /**
+     * Starts a new run. With `{ call: true }` it is a single request (`tinyprobe call`), not a test: it shows the
+     * HTTP status instead of passed or failed, and the request and response without a list of steps.
+     */
+    function reset(title, environment, options = {}) {
+      state = { title, environment, call: Boolean(options.call), steps: [], started: false, finished: null, invalid: null, error: null, to: null };
       selected = null;
       render();
     }
@@ -139,7 +143,7 @@
       meta.append(outcome());
       node.append(meta);
 
-      if (state.finished) {
+      if (state.finished && !state.call) {
         const s = state.finished.summary;
         const parts = [
           `${s.passed_steps}/${s.total_steps} steps passed`,
@@ -157,6 +161,14 @@
     function outcome() {
       if (state.error) return element('span', 'badge badge-failed', 'ERROR');
       if (state.invalid) return element('span', 'badge badge-failed', 'INVALID');
+      // A single request has no verdict: its status says what happened.
+      if (state.call) {
+        const result = state.steps[0]?.result;
+        if (!result) return element('span', 'badge badge-running', 'SENDING');
+        if (result.status === null || result.status === undefined) return element('span', 'badge badge-failed', 'NO RESPONSE');
+        const kind = result.status < 300 ? 'passed' : result.status < 400 ? 'info' : result.status < 500 ? 'running' : 'failed';
+        return element('span', `badge badge-${kind}`, `${result.status} ${result.response?.reason ?? ''}`.trim());
+      }
       if (state.finished) {
         return state.finished.success
           ? element('span', 'badge badge-passed', 'PASSED')
@@ -169,6 +181,12 @@
       if (state.error) return message('error', state.error);
       if (state.invalid) return problems(state.invalid.errors);
       if (state.steps.length === 0) return message('muted', 'Waiting for tinyprobe…');
+      if (state.call) {
+        const step = state.steps[0];
+        if (!step.result) return message('muted', 'Waiting for the response…');
+        selected = key(step.index, null);
+        return details();
+      }
 
       const node = element('main', 'layout');
       node.append(stepList(), details());
@@ -181,7 +199,8 @@
 
     function problems(errors) {
       const node = element('section', 'problems');
-      node.append(element('h2', null, `The workflow is not valid (${errors.length} ${errors.length === 1 ? 'problem' : 'problems'})`));
+      const what = state.call ? 'The request cannot be sent' : 'The workflow is not valid';
+      node.append(element('h2', null, `${what} (${errors.length} ${errors.length === 1 ? 'problem' : 'problems'})`));
       const list = element('ul');
       for (const e of errors) list.append(element('li', null, e.text));
       node.append(list);
@@ -246,7 +265,8 @@
 
       // An item of a for_each step has the same fields as a step.
       const r = (Number.isInteger(iteration) && s.result.iterations?.find(i => i.iteration === iteration)) || s.result;
-      node.append(element('h2', null, r.name));
+      // A single request's name is already the title.
+      if (!state.call) node.append(element('h2', null, r.name));
       const line = element('div', 'request-line');
       line.append(element('span', 'method', r.method ?? ''), element('span', 'url', r.url ?? ''));
       node.append(line);
@@ -263,18 +283,22 @@
       if (r.failure) node.append(element('div', 'failure', `✗ ${r.failure}`));
       if ((r.assertions ?? []).length > 0) node.append(checks(r.assertions));
 
+      // Saved values (a token, an id) are rarely what one looks at: their names show, the values on demand.
       const saved = Object.entries(r.saved ?? {});
       if (saved.length > 0) {
-        node.append(element('h3', null, 'Saved'));
-        node.append(table(saved.map(([name, value]) => [name, JSON.stringify(value)])));
+        const values = element('details', 'exchange saved');
+        values.append(element('summary', null, `Saved  ${saved.map(([name]) => name).join(', ')}`));
+        values.append(table(saved.map(([name, value]) => [name, JSON.stringify(value)])));
+        node.append(values);
       }
 
+      // What was sent first, then what came back.
+      if (r.request) {
+        node.append(section(`Request  ${r.request.method} ${r.request.url}`, r.request.headers, prettyBody(r.request.body), null));
+      }
       if (r.response) {
         node.append(section(`Response  ${r.response.status} ${r.response.reason ?? ''}`, r.response.headers,
           prettyBody(r.response.body), r.response.body_truncated ? 'The body was cut at 1 MiB.' : null));
-      }
-      if (r.request) {
-        node.append(section(`Request  ${r.request.method} ${r.request.url}`, r.request.headers, prettyBody(r.request.body), null));
       }
       return node;
     }
@@ -312,7 +336,13 @@
     }
 
     reset('', null);
-    return { reset, apply, error };
+    /** Shows a step (or one item of a for_each step), as a click on its row does. */
+    function select(index, iteration = null) {
+      selected = key(index, iteration);
+      render();
+    }
+
+    return { reset, apply, error, select };
   }
 
   globalThis.tinyprobeRunView = { create: createRunView, formatDuration, statusClass };

@@ -93,7 +93,7 @@ class RequestHistory {
   /** Shows a call of the history in the run view, as it was. */
   show(entry) {
     if (!entry) return;
-    this.runView.begin(`${entry.endpoint} (${when(entry.time)})`, { reveal: true, environment: entry.environment });
+    this.runView.begin(`${entry.endpoint} (${when(entry.time)})`, { reveal: true, environment: entry.environment, call: true });
     for (const event of entry.events) this.runView.event(event);
   }
 

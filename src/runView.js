@@ -14,6 +14,7 @@ class RunView {
     this.panel = undefined;
     this.title = '';
     this.environment = null;
+    this.call = false;
     this.events = [];
   }
 
@@ -25,13 +26,17 @@ class RunView {
     return this.events.length > 0;
   }
 
-  /** Starts a new run in the panel; `reveal` opens it, otherwise it is updated only if already open. */
-  begin(title, { reveal = true, environment } = {}) {
+  /**
+   * Starts a new run in the panel; `reveal` opens it, otherwise it is updated only if already open. With `call`
+   * it is a single request, shown with its HTTP status instead of passed or failed: it is not a test.
+   */
+  begin(title, { reveal = true, environment, call = false } = {}) {
     this.title = title;
+    this.call = call;
     this.environment = environment ? vscode.workspace.asRelativePath(environment) : null;
     this.events = [];
     if (reveal) this.show();
-    this.post({ type: 'reset', title, environment: this.environment });
+    this.post({ type: 'reset', title, environment: this.environment, call });
   }
 
   event(event) {
@@ -62,7 +67,7 @@ class RunView {
     this.panel.webview.onDidReceiveMessage(message => {
       // The page is ready (also after being reopened): replay the run so far.
       if (message.type === 'ready') {
-        this.post({ type: 'reset', title: this.title, environment: this.environment });
+        this.post({ type: 'reset', title: this.title, environment: this.environment, call: this.call });
         for (const event of this.events) this.post({ type: 'event', event });
       }
     });
