@@ -106,7 +106,7 @@ class EndpointCaller {
     const argv = protocol.callArgs(uri.fsPath, endpoint, args, options);
     const cwd = this.tinyprobe.cwdFor(uri);
     this.tinyprobe.log(`> tinyprobe ${argv.join(' ')}`);
-    this.runView.begin(endpoint, { reveal: true, environment: options.environment });
+    this.runView.begin(endpoint, { reveal: true, environment: options.environment, call: true });
 
     let invalid;
     const events = [];

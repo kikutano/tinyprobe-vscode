@@ -12,6 +12,7 @@
 .badge-passed { background: var(--passed); }
 .badge-failed { background: var(--failed); }
 .badge-running { background: var(--running); }
+.badge-info { background: var(--info); }
 
 .layout { display: grid; grid-template-columns: minmax(200px, 32%) 1fr; gap: 16px; align-items: start; }
 @media (max-width: 640px) { .layout { grid-template-columns: 1fr; } }
