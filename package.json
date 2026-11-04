@@ -122,6 +122,12 @@
         "category": "tinyprobe"
       },
       {
+        "command": "tinyprobe.showDiagram",
+        "title": "Show Workflow Diagram",
+        "category": "tinyprobe",
+        "icon": "$(type-hierarchy)"
+      },
+      {
         "command": "tinyprobe.validate",
         "title": "Validate File",
         "category": "tinyprobe"
@@ -199,6 +205,10 @@
       "commandPalette": [
         {
           "command": "tinyprobe.runWorkflow",
+          "when": "editorLangId == yaml"
+        },
+        {
+          "command": "tinyprobe.showDiagram",
           "when": "editorLangId == yaml"
         },
         {

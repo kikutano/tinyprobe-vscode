@@ -5,7 +5,7 @@ const path = require('node:path');
 const protocol = require('./protocol');
 
 /**
- * "▶ Call" above each endpoint defined in the file, "▶ Run workflow" at the top of a workflow and
+ * "▶ Call" above each endpoint defined in the file, "▶ Run workflow" and "Diagram" at the top of a workflow and
  * "▶ Run to here" on each of its steps, placed with the locations of the last inspection.
  */
 class TinyprobeCodeLens {
@@ -37,6 +37,12 @@ class TinyprobeCodeLens {
         title: '$(play) Run workflow',
         tooltip: 'Run this workflow with the selected environment',
         command: 'tinyprobe.runWorkflow',
+        arguments: [document.uri]
+      }));
+      lenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
+        title: '$(type-hierarchy) Diagram',
+        tooltip: 'Show the steps of this workflow and the values they pass on',
+        command: 'tinyprobe.showDiagram',
         arguments: [document.uri]
       }));
     }

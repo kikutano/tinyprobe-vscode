@@ -1,0 +1,44 @@
+/* The flow of a workflow (flow.js): its steps, and the values each one uses and saves, colored the same where
+   they are saved and used. Shared by tinyprobe-app and the VS Code extension. It uses the host's
+   tokens: --fg, --bg, --muted, --border, --selected, --code-bg, --passed, --failed, --running, --mono,
+   and the lane colors --lane-1 to --lane-8, with fallbacks that read on light and dark backgrounds. */
+
+.flow { overflow-x: auto; }
+.flow-svg { display: block; font-family: inherit; }
+
+.flow-box { fill: var(--panel, var(--bg)); stroke: var(--border); stroke-width: 1.2; }
+.flow-node { cursor: pointer; }
+.flow-node:hover .flow-box { stroke: var(--muted); }
+.flow-node:focus { outline: none; }
+.flow-node:focus-visible .flow-box, .flow-selected .flow-box { stroke: var(--focus, var(--info)); stroke-width: 2.2; }
+.flow-running .flow-box { stroke: var(--running); stroke-width: 2.2; }
+.flow-passed .flow-box { stroke: var(--passed); }
+.flow-failed .flow-box { stroke: var(--failed); stroke-width: 2.2; }
+.flow-skipped { opacity: 0.55; }
+
+.flow-icon { font-size: 16px; fill: var(--muted); }
+.flow-running .flow-icon { fill: var(--running); }
+.flow-passed .flow-icon { fill: var(--passed); }
+.flow-failed .flow-icon { fill: var(--failed); }
+.flow-name { font-size: 16px; font-weight: 600; fill: var(--fg); }
+.flow-detail { font-size: 13px; font-family: var(--mono); fill: var(--muted); }
+.flow-badge { font-size: 13px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.flow-values { font-size: 13.5px; fill: var(--fg); }
+.flow-values-label { fill: var(--fg); font-weight: 700; }
+.flow-values-unused { fill: var(--muted); }
+
+.flow-group { fill: var(--code-bg); stroke: var(--border); stroke-dasharray: 4 3; }
+.flow-group-label { font-size: 12.5px; font-family: var(--mono); fill: var(--muted); }
+
+.lane-0 { --lane: var(--lane-1, #d0610b); }
+.lane-1 { --lane: var(--lane-2, #2f7fd8); }
+.lane-2 { --lane: var(--lane-3, #2f9e5c); }
+.lane-3 { --lane: var(--lane-4, #b14fc4); }
+.lane-4 { --lane: var(--lane-5, #c4a000); }
+.lane-5 { --lane: var(--lane-6, #d6455d); }
+.lane-6 { --lane: var(--lane-7, #10a5a5); }
+.lane-7 { --lane: var(--lane-8, #8a6d3b); }
+.flow-lane-text { fill: var(--lane); font-weight: 600; }
+
+.flow-inputs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 16px 0 6px; color: var(--muted); font-size: 0.9em; }
+.flow-inputs span code { color: var(--fg); }

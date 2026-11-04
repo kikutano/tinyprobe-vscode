@@ -2,6 +2,7 @@
 
 const vscode = require('vscode');
 const fs = require('node:fs');
+const path = require('node:path');
 const protocol = require('./protocol');
 const { Tinyprobe } = require('./tinyprobe');
 const { Inspector } = require('./inspector');
@@ -87,6 +88,16 @@ function activate(context) {
     vscode.commands.registerCommand('tinyprobe.generateWithAi', () => migrator.generate()),
     vscode.commands.registerCommand('tinyprobe.migrateWithAi', uri => migrator.migrate(uri instanceof vscode.Uri ? uri : undefined)),
     vscode.commands.registerCommand('tinyprobe.selectEnvironment', () => tinyprobe.selectEnvironment()),
+    vscode.commands.registerCommand('tinyprobe.showDiagram', async uri => {
+      const file = target(uri);
+      if (!file) return;
+      const inspection = inspector.get(file.fsPath) ?? await inspector.inspect(file);
+      if (inspection?.kind !== 'workflow' || !inspection.valid) {
+        vscode.window.showWarningMessage('tinyprobe: the diagram is drawn for a valid workflow file.');
+        return;
+      }
+      runView.begin(inspection.name || path.basename(file.fsPath), { reveal: true, flow: inspection });
+    }),
     vscode.commands.registerCommand('tinyprobe.showRun', () => {
       if (runView.hasRun) runView.show();
       else vscode.window.showInformationMessage('tinyprobe: nothing has run yet.');

@@ -15,6 +15,7 @@
   --info: var(--vscode-charts-blue, #0969da);
   --mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Consolas, monospace);
   --focus: var(--vscode-focusBorder, #0969da);
+  --panel: var(--vscode-editorWidget-background, var(--bg));
 }
 
 * { box-sizing: border-box; }
@@ -28,3 +29,7 @@ body {
   font-size: var(--vscode-font-size, 13px);
 }
 
+
+/* The workflow's diagram, above the run: folded with its summary when the run needs the room. */
+.flow-box-panel { margin-bottom: 14px; }
+.flow-box-panel > summary { cursor: pointer; color: var(--muted); margin-bottom: 8px; }

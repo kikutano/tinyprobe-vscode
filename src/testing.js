@@ -165,7 +165,8 @@ class WorkflowTests {
     const cwd = this.tinyprobe.cwdFor(item.uri);
     this.tinyprobe.log(`> tinyprobe ${args.join(' ')}`);
     run.appendOutput(`> tinyprobe ${args.join(' ')}\r\n`, undefined, item);
-    this.runView.begin(item.label, { reveal, environment: options.environment });
+    const inspection = this.inspector.get(item.uri.fsPath);
+    this.runView.begin(item.label, { reveal, environment: options.environment, flow: inspection?.kind === 'workflow' && inspection.valid ? inspection : null });
 
     const completed = new Set();
     const events = [];
