@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
 - **The diagram of a workflow**: the steps, what each one calls, and the values each one saves colored the same where later steps use them, as in tinyprobe-app. It is above the run in the run view, lit up step by step as the workflow runs; a click on a step shows its request and response. **Diagram** at the top of a workflow file (or *tinyprobe: Show Workflow Diagram*) shows it without running.
 - **License: GPL-3.0.** From this version the extension is licensed under the GNU General Public License, version 3 (GPL-3.0-only): it stays free and open source, and a changed version can be shared only under the same license, with its source code. Releases up to 0.9.0 stay under the MIT License.
