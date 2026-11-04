@@ -89,7 +89,7 @@ integration() {
 }
 
 # The run view is shared with tinyprobe-app, which keeps the canonical copy (tinyprobe spec 0017).
-SHARED_FILES="run-view.js run-view.css environment-file.js history.js"
+SHARED_FILES="run-view.js run-view.css environment-file.js history.js flow.js flow.css"
 
 sync_shared() {
   app="${TINYPROBE_APP_REPO:-$ROOT/../tinyprobe-app}"

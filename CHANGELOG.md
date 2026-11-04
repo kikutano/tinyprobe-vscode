@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **The diagram of a workflow**: the steps, what each one calls, and the values each one saves colored the same where later steps use them, as in tinyprobe-app. It is above the run in the run view, lit up step by step as the workflow runs; a click on a step shows its request and response. **Diagram** at the top of a workflow file (or *tinyprobe: Show Workflow Diagram*) shows it without running.
 - **License: GPL-3.0.** From this version the extension is licensed under the GNU General Public License, version 3 (GPL-3.0-only): it stays free and open source, and a changed version can be shared only under the same license, with its source code. Releases up to 0.9.0 stay under the MIT License.
 - The run view, the editing of environment files and the request history are now shared with [tinyprobe-app](https://github.com/kikutano/tinyprobe-app), the tinyprobe app for the browser: the same code in both.
 - **A request is not a test**: ▶ Call, and a call of the History, show the HTTP status of the response (`401 Unauthorized` in orange, `200 OK` in green, 5xx and no response in red) instead of `PASSED`, and no longer show "1/1 steps passed · 0 checks": just the request and the response.

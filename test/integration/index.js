@@ -60,23 +60,30 @@ async function run() {
     assert.equal(login.range.start.line, loginLine);
   });
 
-  await check('a workflow gets a Run CodeLens, a Run to here lens per step line, and no Call lens for imported endpoints', async () => {
+  await check('a workflow gets a Run and a Diagram CodeLens, a Run to here lens per step line, and no Call lens for imported endpoints', async () => {
     await vscode.window.showTextDocument(users);
     const json = await waitFor(() => tinyprobe.inspector.get(users.fsPath), 'the inspection of the workflow');
     const version = await waitFor(() => tinyprobe.tinyprobe.version, 'the version of the binary');
     const lenses = await vscode.commands.executeCommand('vscode.executeCodeLensProvider', users);
     if (!protocol.supportsRunTo(version)) {
       // A released binary older than --to: no Run to here, everything else as before.
-      assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow']);
+      assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow', 'tinyprobe.showDiagram']);
       return;
     }
     const lines = new Set(json.steps.map(s => s.location.line));
-    assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow', ...[...lines].map(() => 'tinyprobe.runToHere')]);
+    assert.deepEqual(lenses.map(l => l.command?.command), ['tinyprobe.runWorkflow', 'tinyprobe.showDiagram', ...[...lines].map(() => 'tinyprobe.runToHere')]);
 
     // The lens of a step runs up to it: its number, as `--to` takes it, on the step's line.
     const third = json.steps[2];
     const lens = lenses.find(l => l.command.command === 'tinyprobe.runToHere' && l.range.start.line === third.location.line - 1);
     assert.deepEqual(lens.command.arguments, [users, 3]);
+  });
+
+  await check('Diagram shows the workflow in the run view without running it', async () => {
+    await vscode.commands.executeCommand('tinyprobe.showDiagram', users);
+    assert.equal(tinyprobe.runView.flow?.kind, 'workflow');
+    assert.equal(tinyprobe.runView.flow.file, tinyprobe.inspector.get(users.fsPath).file);
+    assert.deepEqual(tinyprobe.runView.events, []);
   });
 
   await check('Run to here runs the workflow up to the step and shows it in the run view', async () => {
@@ -86,6 +93,8 @@ async function run() {
     const started = tinyprobe.runView.events.find(e => e.event === 'run_started');
     assert.equal(started.to, 1);
     assert.equal(finished.success, true);
+    // A workflow's run has its diagram above it.
+    assert.equal(tinyprobe.runView.flow?.kind, 'workflow');
     assert.equal(finished.summary.stopped_after, 1);
     assert.equal(finished.summary.total_steps, 2);
   });

@@ -15,6 +15,7 @@ class RunView {
     this.title = '';
     this.environment = null;
     this.call = false;
+    this.flow = null;
     this.events = [];
   }
 
@@ -28,15 +29,21 @@ class RunView {
 
   /**
    * Starts a new run in the panel; `reveal` opens it, otherwise it is updated only if already open. With `call`
-   * it is a single request, shown with its HTTP status instead of passed or failed: it is not a test.
+   * it is a single request, shown with its HTTP status instead of passed or failed: it is not a test. `flow`,
+   * the inspection of a workflow, draws its diagram above the run, lit up as the events arrive.
    */
-  begin(title, { reveal = true, environment, call = false } = {}) {
+  begin(title, { reveal = true, environment, call = false, flow = null } = {}) {
     this.title = title;
     this.call = call;
+    this.flow = flow;
     this.environment = environment ? vscode.workspace.asRelativePath(environment) : null;
     this.events = [];
     if (reveal) this.show();
-    this.post({ type: 'reset', title, environment: this.environment, call });
+    this.post(this.resetMessage());
+  }
+
+  resetMessage() {
+    return { type: 'reset', title: this.title, environment: this.environment, call: this.call, flow: this.flow };
   }
 
   event(event) {
@@ -67,7 +74,7 @@ class RunView {
     this.panel.webview.onDidReceiveMessage(message => {
       // The page is ready (also after being reopened): replay the run so far.
       if (message.type === 'ready') {
-        this.post({ type: 'reset', title: this.title, environment: this.environment, call: this.call });
+        this.post(this.resetMessage());
         for (const event of this.events) this.post({ type: 'event', event });
       }
     });
@@ -90,11 +97,14 @@ class RunView {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="${uri('run-view-host.css')}">
   <link rel="stylesheet" href="${uri('shared', 'run-view.css')}">
+  <link rel="stylesheet" href="${uri('shared', 'flow.css')}">
   <title>tinyprobe</title>
 </head>
 <body>
+  <details id="flow-box" class="flow-box-panel" open hidden><summary>Diagram</summary><div id="flow" class="flow"></div></details>
   <div id="app"></div>
   <script nonce="${nonce}" src="${uri('shared', 'run-view.js')}"></script>
+  <script nonce="${nonce}" src="${uri('shared', 'flow.js')}"></script>
   <script nonce="${nonce}" src="${uri('run-view-host.js')}"></script>
 </body>
 </html>`;
