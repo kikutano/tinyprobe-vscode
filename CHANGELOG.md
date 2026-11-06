@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.1
 
 - **Long runs are fast again in the run view.** A workflow of 500 steps took minutes to show its run since 0.10.0: the diagram measured the panel on every event of the run, which made each event slower than the one before, and the results were rebuilt once per event. They are now drawn once for all the events that arrived in between, as in tinyprobe-app 0.4.9, the shared code this release copies.
 
