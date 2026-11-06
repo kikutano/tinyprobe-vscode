@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Long runs are fast again in the run view.** A workflow of 500 steps took minutes to show its run since 0.10.0: the diagram measured the panel on every event of the run, which made each event slower than the one before, and the results were rebuilt once per event. They are now drawn once for all the events that arrived in between, as in tinyprobe-app 0.4.9, the shared code this release copies.
+
 ## 0.10.0
 
 - **The diagram of a workflow**: the steps, what each one calls, and the values each one saves colored the same where later steps use them, as in tinyprobe-app. It is above the run in the run view, lit up step by step as the workflow runs; a click on a step shows its request and response. **Diagram** at the top of a workflow file (or *tinyprobe: Show Workflow Diagram*) shows it without running.

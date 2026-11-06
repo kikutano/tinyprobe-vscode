@@ -205,19 +205,47 @@
     let states = [];
     let current = selected;
     let NODE_W = DEFAULT_W;
+    // The width of `root`, from the resize observer. Reading clientWidth while drawing forced a layout of the whole
+    // page on every event of a run, and made a run of 500 steps take minutes.
+    let room = 0;
 
     /** The width of a step box for the width of `root`, or the default when it is not laid out yet. */
     function fit() {
-      const room = Math.floor(root.clientWidth || 0);
       return room > 0 ? Math.max(MIN_W, room - NODE_X - 8) : DEFAULT_W;
     }
 
     if (typeof ResizeObserver !== 'undefined') {
-      const watch = new ResizeObserver(() => {
+      const watch = new ResizeObserver(entries => {
         if (!root.isConnected) return watch.disconnect();
+        room = Math.floor(entries[entries.length - 1].contentRect.width);
         if (fit() !== NODE_W) draw();
       });
       watch.observe(root);
+    }
+
+    // The events of a run arrive faster than a screen refreshes: they update the states, and the picture is drawn
+    // once with all of them, at the next frame. A hidden page gets no frames (a tab in the background, a webview
+    // that is not shown), so a timer draws it too, whichever comes first.
+    let pending = null;
+    function drawSoon() {
+      if (pending) return;
+      const now = () => {
+        if (!pending) return;
+        clearTimeout(pending.timer);
+        if (pending.frame) cancelAnimationFrame(pending.frame);
+        pending = null;
+        draw();
+      };
+      pending = { timer: setTimeout(now, 100), frame: typeof requestAnimationFrame === 'function' ? requestAnimationFrame(now) : null };
+    }
+
+    function drawNow() {
+      if (pending) {
+        clearTimeout(pending.timer);
+        if (pending.frame) cancelAnimationFrame(pending.frame);
+        pending = null;
+      }
+      draw();
     }
 
     function reset() {
@@ -248,7 +276,9 @@
           else if (s.status === 'pending') s.status = 'skipped';
         }
       }
-      draw();
+      // The end of a run is drawn at once: it is the picture that stays.
+      if (event.event === 'run_finished') drawNow();
+      else drawSoon();
     }
 
     function select(at) {

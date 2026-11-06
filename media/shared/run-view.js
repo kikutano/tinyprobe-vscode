@@ -118,6 +118,26 @@
           state.invalid = event;
           break;
       }
+      // The end of a run is shown at once; the events before it are shown together, once per frame.
+      if (event.event === 'run_finished' || event.event === 'invalid') renderNow();
+      else renderSoon();
+    }
+
+    // A run sends several events per step, faster than a screen refreshes: the view is rebuilt once with all of them,
+    // not once per event (500 steps rebuilt 2000 times grew with the square of the steps). A hidden page gets no
+    // frames, so a timer renders it too, whichever comes first.
+    let pending = null;
+    function renderSoon() {
+      if (pending) return;
+      pending = { timer: setTimeout(renderNow, 100), frame: typeof requestAnimationFrame === 'function' ? requestAnimationFrame(renderNow) : null };
+    }
+
+    function renderNow() {
+      if (pending) {
+        clearTimeout(pending.timer);
+        if (pending.frame) cancelAnimationFrame(pending.frame);
+        pending = null;
+      }
       render();
     }
 
