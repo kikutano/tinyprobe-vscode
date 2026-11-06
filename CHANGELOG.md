@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.3
 
 - **▶ Up to here on every step of the diagram**, as in tinyprobe-app 0.4.13: a button at the right of each step runs the workflow up to it and shows its response, without leaving the run view. The lens above each step in the editor, which was "Run to here", is "▶ Up to here" too, and its tooltip says what it does: it runs the steps before this one again, stops there and shows its response.
 
