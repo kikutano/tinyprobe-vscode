@@ -6,7 +6,7 @@ const protocol = require('./protocol');
 
 /**
  * "▶ Call" above each endpoint defined in the file, "▶ Run workflow" and "Diagram" at the top of a workflow and
- * "▶ Run to here" on each of its steps, placed with the locations of the last inspection.
+ * "▶ Up to here" on each of its steps, placed with the locations of the last inspection.
  */
 class TinyprobeCodeLens {
   /**
@@ -55,8 +55,8 @@ class TinyprobeCodeLens {
       const isThisFile = file => protocol.samePath(protocol.resolveFile(cwd, file), here);
       for (const target of protocol.runToTargets(json, isThisFile)) {
         lenses.push(new vscode.CodeLens(new vscode.Range(target.line, 0, target.line, 0), {
-          title: '$(debug-step-over) Run to here',
-          tooltip: `Run the workflow up to step ${target.step} (${target.name}) and show its response`,
+          title: '$(play) Up to here',
+          tooltip: `Runs the steps before step ${target.step} (${target.name}) again, stops there and shows its response`,
           command: 'tinyprobe.runToHere',
           arguments: [document.uri, target.step]
         }));

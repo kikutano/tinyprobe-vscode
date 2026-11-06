@@ -8,9 +8,13 @@ const crypto = require('node:crypto');
  * It is fed the NDJSON events as they arrive; they are kept, so a reopened panel shows the last run again.
  */
 class RunView {
-  /** @param {vscode.ExtensionContext} context */
-  constructor(context) {
+  /**
+   * @param {vscode.ExtensionContext} context
+   * @param {() => boolean} canRunTo whether the binary has `run --to`, for ▶ Up to here on the diagram's steps
+   */
+  constructor(context, canRunTo = () => false) {
     this.context = context;
+    this.canRunTo = canRunTo;
     this.panel = undefined;
     this.title = '';
     this.environment = null;
@@ -43,12 +47,18 @@ class RunView {
   }
 
   resetMessage() {
-    return { type: 'reset', title: this.title, environment: this.environment, call: this.call, flow: this.flow };
+    return { type: 'reset', title: this.title, environment: this.environment, call: this.call, flow: this.flow, runTo: Boolean(this.flow) && this.canRunTo() };
   }
 
   event(event) {
     this.events.push(event);
     this.post({ type: 'event', event });
+  }
+
+  /** ▶ Up to here on a step of the diagram: the workflow shown, run up to that step (`run --to`), as the CodeLens does. */
+  runTo(step) {
+    if (!this.flow?.file) return Promise.resolve();
+    return vscode.commands.executeCommand('tinyprobe.runToHere', vscode.Uri.file(this.flow.file), step);
   }
 
   /** Something went wrong outside the protocol (tinyprobe missing, bad arguments). */
@@ -77,6 +87,7 @@ class RunView {
         this.post(this.resetMessage());
         for (const event of this.events) this.post({ type: 'event', event });
       }
+      if (message.type === 'runTo' && Number.isInteger(message.step)) this.runTo(message.step);
     });
   }
 

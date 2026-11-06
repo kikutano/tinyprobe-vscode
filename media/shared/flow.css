@@ -42,3 +42,10 @@
 
 .flow-inputs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 16px 0 6px; color: var(--muted); font-size: 0.9em; }
 .flow-inputs span code { color: var(--fg); }
+
+/* "▶ Up to here" on a step, when the host passes onRunTo (tinyprobe-app). */
+.flow-run-to { cursor: pointer; }
+.flow-run-to rect { fill: var(--panel, var(--bg)); stroke: var(--border); }
+.flow-run-to text { font-size: 12px; font-weight: 600; fill: var(--fg); }
+.flow-run-to:hover rect, .flow-run-to:focus-visible rect { stroke: var(--focus, var(--info)); stroke-width: 1.6; }
+.flow-run-to:focus { outline: none; }

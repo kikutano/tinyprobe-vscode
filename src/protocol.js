@@ -17,7 +17,7 @@ const MCP_VERSION = '0.13.0';
 /** The first version with `tinyprobe schema`, which completion and hover need. */
 const SCHEMA_VERSION = '0.14.0';
 
-/** The first version with `tinyprobe run --to`, which "Run to here" needs. */
+/** The first version with `tinyprobe run --to`, which "▶ Up to here" needs. */
 const RUN_TO_VERSION = '0.18.0';
 
 /**
@@ -206,7 +206,7 @@ function supportsRunTo(version) {
 }
 
 /**
- * The "Run to here" lenses of a workflow: one per line of the file that has steps, running up to the last step
+ * The "▶ Up to here" lenses of a workflow: one per line of the file that has steps, running up to the last step
  * on that line. The steps of a sequence all have the line of their `use` step, so its lens runs the whole sequence.
  * Returns `{ line, step, name }`, with `line` 0-based and `step` the 1-based number that `--to` takes.
  */
