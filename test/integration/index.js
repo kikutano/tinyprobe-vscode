@@ -86,6 +86,16 @@ async function run() {
     assert.deepEqual(tinyprobe.runView.events, []);
   });
 
+  await check('▶ Up to here on a step of the diagram runs the workflow shown up to that step', async () => {
+    if (!protocol.supportsRunTo(tinyprobe.tinyprobe.version)) return;
+    await vscode.commands.executeCommand('tinyprobe.showDiagram', users);
+    assert.equal(tinyprobe.runView.resetMessage().runTo, true);
+    await tinyprobe.runView.runTo(3);
+    const started = await waitFor(() => tinyprobe.runView.events.find(e => e.event === 'run_started'), 'the start of the run');
+    await waitFor(() => tinyprobe.runView.events.find(e => e.event === 'run_finished'), 'the end of the run');
+    assert.equal(started.to, 2);
+  });
+
   await check('Run to here runs the workflow up to the step and shows it in the run view', async () => {
     if (!protocol.supportsRunTo(tinyprobe.tinyprobe.version)) return;
     await vscode.commands.executeCommand('tinyprobe.runToHere', users, 2);

@@ -4,13 +4,15 @@
 (function () {
   'use strict';
 
+  // acquireVsCodeApi can be called once per page.
+  const vscodeApi = acquireVsCodeApi();
   const view = globalThis.tinyprobeRunView.create(document.getElementById('app'));
   const flows = globalThis.tinyprobeFlow;
   const flowBox = document.getElementById('flow-box');
   const flowRoot = document.getElementById('flow');
   let diagram = null;
 
-  function drawFlow(inspection) {
+  function drawFlow(inspection, runTo) {
     diagram = null;
     flowRoot.replaceChildren();
     flowBox.hidden = !inspection;
@@ -21,19 +23,21 @@
       onSelect: at => {
         view.select(model.nodes[at].index);
         requestAnimationFrame(() => document.querySelector('#app .details')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-      }
+      },
+      // ▶ Up to here: the extension runs the workflow up to the step (its number as `run --to` takes it).
+      onRunTo: runTo ? at => vscodeApi.postMessage({ type: 'runTo', step: model.nodes[at].index + 1 }) : null
     });
   }
 
   window.addEventListener('message', ({ data }) => {
     if (data.type === 'reset') {
       view.reset(data.title, data.environment, { call: Boolean(data.call) });
-      drawFlow(data.flow);
+      drawFlow(data.flow, Boolean(data.runTo));
     } else if (data.type === 'event') {
       view.apply(data.event);
       diagram?.apply(data.event);
     } else if (data.type === 'error') view.error(data.message);
   });
 
-  acquireVsCodeApi().postMessage({ type: 'ready' });
+  vscodeApi.postMessage({ type: 'ready' });
 })();

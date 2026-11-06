@@ -202,7 +202,7 @@
    * Draws the flow in `root` and returns { apply(event), reset(), select(position) }. `onSelect(position)` is
    * called when a step is clicked or chosen with the keyboard.
    */
-  function createFlow(root, model, { onSelect, selected = null } = {}) {
+  function createFlow(root, model, { onSelect, onRunTo = null, selected = null } = {}) {
     let states = [];
     let current = selected;
     let NODE_W = DEFAULT_W;
@@ -340,6 +340,28 @@
       const icon = { pending: '○', running: '●', passed: '✓', failed: '✗', skipped: '–' }[state.status] ?? '○';
       group.append(svg('text', { x: NODE_X + 14, y: top + 25, class: 'flow-icon' }, icon));
 
+      // With onRunTo, "▶ Up to here" at the right of the first line runs the workflow up to this step. It is a
+      // button of its own: a click on it does not select the step.
+      let right = NODE_X + NODE_W - 14;
+      if (onRunTo) {
+        const RUN_W = 96;
+        const runTo = () => onRunTo(i);
+        const button = svg('g', { class: 'flow-run-to', tabindex: 0, role: 'button', 'aria-label': `Run the workflow up to step ${i + 1}` });
+        button.addEventListener('click', e => { e.stopPropagation(); runTo(); });
+        button.addEventListener('keydown', e => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          e.stopPropagation();
+          runTo();
+        });
+        const x = NODE_X + NODE_W - 10 - RUN_W;
+        button.append(svg('rect', { x, y: top + 10, width: RUN_W, height: 22, rx: 11 }));
+        button.append(svg('text', { x: x + RUN_W / 2, y: top + 25, 'text-anchor': 'middle' }, '▶ Up to here'));
+        button.append(svg('title', null, 'Runs the steps before this one again, stops here and shows its response'));
+        group.append(button);
+        right = x - 10;
+      }
+
       // Badges at the right of the first line: polling, items, progress, duration. The name takes what is left.
       const badges = [];
       if (node.until) badges.push(state.status === 'running' && state.attempt > 1 ? `↻ attempt ${state.attempt}` : `↻ until, every ${duration(node.until.every)}`);
@@ -348,8 +370,8 @@
       }
       if (state.result) badges.push(`${state.result.status ?? '---'} · ${duration(state.result.duration_ms)}`);
       const badgeText = badges.join('   ');
-      if (badges.length > 0) group.append(svg('text', { x: NODE_X + NODE_W - 14, y: top + 25, 'text-anchor': 'end', class: 'flow-badge' }, badgeText));
-      const nameChars = Math.max(12, Math.floor((NODE_W - 40 - 28 - badgeText.length * 7.2) / 8.8));
+      if (badges.length > 0) group.append(svg('text', { x: right, y: top + 25, 'text-anchor': 'end', class: 'flow-badge' }, badgeText));
+      const nameChars = Math.max(12, Math.floor((right - NODE_X - 40 - 14 - badgeText.length * 7.2) / 8.8));
       group.append(svg('text', { x: NODE_X + 40, y: top + 25, class: 'flow-name' }, shorten(`${i + 1}. ${node.name}`, nameChars)));
 
       const detail = node.type === 'sleep' ? `wait ${duration(node.duration)}`

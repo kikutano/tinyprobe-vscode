@@ -22,13 +22,13 @@ const YAML = [{ language: 'yaml', scheme: 'file' }];
 function activate(context) {
   const tinyprobe = new Tinyprobe(context);
   const inspector = new Inspector(tinyprobe);
-  const runView = new RunView(context);
+  const runView = new RunView(context, () => protocol.supportsRunTo(tinyprobe.version));
   const tests = new WorkflowTests(tinyprobe, inspector, runView);
   const history = new RequestHistory(context, runView, inspector);
   const caller = new EndpointCaller(tinyprobe, inspector, runView, history);
   const environment = new EnvironmentView(tinyprobe);
   const lenses = new TinyprobeCodeLens(inspector, uri => tinyprobe.cwdFor(uri), () => tinyprobe.version);
-  // "Run to here" appears once the binary's version is known.
+  // "▶ Up to here" appears once the binary's version is known.
   tinyprobe.versionChanged = () => lenses.changed.fire();
   const migrator = new Migrator();
   const mcp = new McpServerProvider(tinyprobe);

@@ -86,7 +86,7 @@
     "commands": [
       {
         "command": "tinyprobe.runToHere",
-        "title": "Run to Here",
+        "title": "Run Up to Here",
         "category": "tinyprobe"
       },
       {
