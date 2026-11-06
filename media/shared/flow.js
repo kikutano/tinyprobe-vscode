@@ -169,7 +169,8 @@
   // The steps are as wide as the place the flow is drawn in, at the page's own text size: a picture scaled to
   // fit made its text bigger than the page's, and left it narrower than what is around it.
   const DEFAULT_W = 600;
-  const MIN_W = 420;
+  // Narrow enough for a phone (a 390 px screen leaves about 358 px), below that the flow scrolls.
+  const MIN_W = 280;
   const LINE = 20;
   /** The width of a character of the 13.5px text, to wrap values and shorten names inside a node. */
   const CHAR = 7.9;
